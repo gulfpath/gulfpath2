@@ -1,0 +1,8 @@
+{
+  "name": "GulfPath 2026",
+  "description": "A job search platform for blue-collar workers migrating to the GCC, featuring voice-first AI assistance.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}

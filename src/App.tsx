@@ -15,7 +15,9 @@ import EmployerVerification from "./pages/EmployerVerification";
 import ReportFraud from "./pages/ReportFraud";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Profile from "./pages/Profile";
 import MockInterview from "./pages/MockInterview";
+import Contact from "./pages/Contact";
 import VoiceAssistant from "./components/VoiceAssistant";
 import "./i18n";
 
@@ -35,7 +37,9 @@ export default function App() {
             <Route path="/fraud-report" element={<ReportFraud />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/mock-interview" element={<MockInterview />} />
+            <Route path="/contact" element={<Contact />} />
           </Routes>
         </main>
         <Footer />

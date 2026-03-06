@@ -70,11 +70,9 @@ export default function Home() {
     { src: "https://www.cbnme.com/wp-content/uploads/2024/07/Imdaad_Logo-1024x979.png", alt: "Imdaad" },
     { src: "https://res.cloudinary.com/protenders/image/upload/s--91li-RxN--/c_limit,d_default_logo,dpr_auto,f_auto,fl_progressive:semi,q_auto:eco,w_auto:100/7912130a9a6a987a664bde3795acc94f.png", alt: "Protenders" },
     { src: "https://www.khidmah.com/images/logo.png", alt: "Khidmah" },
-    { src: "https://www.hospitality-interiors.net/wp-content/uploads/2023/04/untitled-1.w_28-1.jpg", alt: "Hospitality Interiors" },
-    { src: "https://cdb.rotana.com/rcnimagelib/nx_logo_w_10.png", alt: "Rotana" },
+    { src: "https://www.hospitality-interiors.net/wp-content/uploads/2023/04/untitled-1.w_28-1.jpg", alt: "Jumeirah" },
     { src: "https://cdn-gddog.nitrocdn.com/BPgPjcmRmbafwoTOcDjuDVfWTJplhtTj/assets/images/optimized/rev-e80e843/wp-content/uploads/2022/06/alfanar.png", alt: "Alfanar" },
     { src: "https://iconape.com/wp-content/png_logo_vector/%D8%B4%D8%B9%D8%A7%D8%B1-%D9%85%D8%AC%D9%85%D9%88%D8%B9%D8%A9-%D8%A8%D9%86-%D9%84%D8%A7%D8%AF%D9%86-%D8%A7%D9%84%D8%B3%D8%B9%D9%88%D8%AF%D9%8A%D8%A9.png", alt: "Saudi Binladin Group" },
-    { src: "https://yc.com.sa/_next/static/media/logo-light.0a3c2bb7.png", alt: "YC" },
     { src: "https://www.qatarenergy.qa/Style%20Library/QPRevamp2021/imgs/QP%20logo%20vertical-big.jpg", alt: "QatarEnergy" },
     { src: "https://www.nbtcgroup.com/logo.png", alt: "NBTC Group" },
     { src: "https://kw.muqawlat.com/uploads/images/15954136902295.png", alt: "Muqawlat" },
@@ -184,7 +182,7 @@ export default function Home() {
                 key={index}
                 src={logo.src}
                 alt={logo.alt}
-                className="h-12 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+                className="h-16 w-32 object-contain transition-all duration-300"
                 referrerPolicy="no-referrer"
               />
             ))}
@@ -441,27 +439,90 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Trust & Safety Banner */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white border-t border-gray-100 pb-24">
-        <div className="max-w-5xl mx-auto bg-red-50 rounded-3xl p-8 md:p-12 border border-red-100 flex flex-col md:flex-row items-center gap-8">
-          <div className="bg-red-100 p-4 rounded-full shrink-0">
-            <ShieldCheck className="h-12 w-12 text-red-600" />
-          </div>
-          <div>
-            <h3 className="text-2xl font-bold text-red-900 mb-2">
-              Beware of Fraudulent Agents
-            </h3>
-            <p className="text-red-800 mb-4">
-              GulfPath will NEVER ask you for money to secure a job. Reputable
-              GCC employers pay all recruitment fees, including visa and flight
-              tickets.
+      {/* Blogs Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 border-t border-gray-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Latest from GulfPath Blog
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Stay updated with the latest news, tips, and guides for working in the GCC.
             </p>
-            <Link
-              to="/fraud-report"
-              className="inline-flex items-center gap-2 text-red-700 font-bold hover:text-red-800 underline underline-offset-4"
-            >
-              Report a fraudulent agent or company
-            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                title: "How to Prepare for a Technical Interview in Dubai",
+                image: "https://picsum.photos/seed/blog1/600/400",
+                date: "March 1, 2026",
+                category: "Interview Tips"
+              },
+              {
+                title: "Understanding Your Rights as a Worker in Saudi Arabia",
+                image: "https://picsum.photos/seed/blog2/600/400",
+                date: "February 25, 2026",
+                category: "Legal & Rights"
+              },
+              {
+                title: "Top 5 High-Demand Blue-Collar Jobs in Qatar for 2026",
+                image: "https://picsum.photos/seed/blog3/600/400",
+                date: "February 18, 2026",
+                category: "Career Guide"
+              }
+            ].map((blog, index) => (
+              <div key={index} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 transition-transform hover:-translate-y-1 hover:shadow-md">
+                <img src={blog.image} alt={blog.title} className="w-full h-48 object-cover" referrerPolicy="no-referrer" />
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">{blog.category}</span>
+                    <span className="text-xs text-gray-500">{blog.date}</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 leading-tight">{blog.title}</h3>
+                  <Link to="#" className="text-blue-600 font-semibold hover:text-blue-700 inline-flex items-center gap-1">
+                    Read more <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Contact / Newsletter Form */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-t border-gray-100 pb-24">
+        <div className="max-w-4xl mx-auto bg-blue-900 rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-blue-800/50 blur-3xl rounded-full w-96 h-96 -top-20 -right-20"></div>
+          <div className="relative z-10 text-center">
+            <h2 className="text-3xl font-bold text-white mb-4">
+              Get Job Alerts on WhatsApp
+            </h2>
+            <p className="text-blue-200 mb-8 max-w-xl mx-auto">
+              Subscribe to receive the latest verified job opportunities directly to your phone. No spam, only real jobs.
+            </p>
+            <form className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto" onSubmit={(e) => e.preventDefault()}>
+              <input 
+                type="text" 
+                placeholder="Your Name" 
+                className="flex-1 bg-white/10 border border-blue-700/50 text-white placeholder-blue-300 px-6 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+              <input 
+                type="tel" 
+                placeholder="WhatsApp Number" 
+                className="flex-1 bg-white/10 border border-blue-700/50 text-white placeholder-blue-300 px-6 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+              <button 
+                type="submit" 
+                className="bg-blue-500 hover:bg-blue-400 text-white font-bold px-8 py-4 rounded-xl transition-colors whitespace-nowrap"
+              >
+                Subscribe Now
+              </button>
+            </form>
+            <p className="text-xs text-blue-300 mt-4">
+              By subscribing, you agree to our Privacy Policy and Terms of Service.
+            </p>
           </div>
         </div>
       </section>

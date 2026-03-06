@@ -52,10 +52,10 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  to="/help"
+                  to="/contact"
                   className="hover:text-blue-400 transition-colors"
                 >
-                  Help Center
+                  Contact Support
                 </Link>
               </li>
             </ul>

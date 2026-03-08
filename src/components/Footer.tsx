@@ -52,6 +52,14 @@ export default function Footer() {
               </li>
               <li>
                 <Link
+                  to="/faq"
+                  className="hover:text-blue-400 transition-colors"
+                >
+                  Trust Manual (FAQ)
+                </Link>
+              </li>
+              <li>
+                <Link
                   to="/contact"
                   className="hover:text-blue-400 transition-colors"
                 >

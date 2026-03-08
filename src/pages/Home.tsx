@@ -14,10 +14,15 @@ import {
   FileBadge,
   Video,
   Building2,
-  Bot
+  Bot,
+  Plane,
+  ChevronDown,
+  ChevronUp,
+  Banknote
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import JobCard from "../components/JobCard";
+import { faqCategories } from "../components/FAQSection";
 
 export default function Home() {
   const { t } = useTranslation();
@@ -25,7 +30,35 @@ export default function Home() {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [openFaqId, setOpenFaqId] = useState<number | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  const [calcCurrency, setCalcCurrency] = useState('AED');
+  const [calcAmount, setCalcAmount] = useState(2000);
+
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const [trackingStatus, setTrackingStatus] = useState<number | null>(null);
+
+  const handleTrack = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (trackingNumber.trim().length > 5) {
+      setTrackingStatus(Math.floor(Math.random() * 4));
+    } else {
+      setTrackingStatus(null);
+    }
+  };
+
+  const currencyRates: Record<string, number> = {
+    'AED': 22.6,
+    'SAR': 22.3,
+    'QAR': 22.9,
+    'KWD': 272.5,
+    'OMR': 217.3,
+    'BHD': 221.8
+  };
+
+  const inrEquivalent = Math.round(calcAmount * currencyRates[calcCurrency]);
+  const estimatedSavings = Math.round(inrEquivalent * 0.7);
 
   const jobSuggestions = [
     { name: "Driver", category: "Transport", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
@@ -72,13 +105,27 @@ export default function Home() {
     }
   };
 
+  const toggleFaq = (id: number) => {
+    setOpenFaqId(openFaqId === id ? null : id);
+  };
+
+  const renderAnswer = (text: string) => {
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={index} className="font-bold text-slate-800">{part.slice(2, -2)}</strong>;
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
+
   const trendingJobs = [
     {
       id: "1",
       title: "Residential Electrician",
       company: "Al Futtaim Group",
       location: "Dubai, UAE",
-      salary: "2,500 AED / month",
+      salary: "2,500 AED (₹56,000) / month",
       experience: "2-5 Years",
       isFree: true,
       benefits: ["Free Food", "Accommodation", "Medical"],
@@ -92,7 +139,7 @@ export default function Home() {
       title: "Heavy Vehicle Driver",
       company: "Saudi Binladin Group",
       location: "Riyadh, KSA",
-      salary: "3,000 SAR / month",
+      salary: "3,000 SAR (₹66,000) / month",
       experience: "3+ Years",
       isFree: true,
       benefits: ["Accommodation", "Transportation", "Medical"],
@@ -106,7 +153,7 @@ export default function Home() {
       title: "HVAC Technician",
       company: "Qatar Airways Facilities",
       location: "Doha, Qatar",
-      salary: "2,800 QAR / month",
+      salary: "2,800 QAR (₹64,000) / month",
       experience: "1-3 Years",
       isFree: true,
       benefits: ["Free Food", "Accommodation", "Transportation"],
@@ -120,7 +167,7 @@ export default function Home() {
       title: "Plumber / Pipefitter",
       company: "ASGC Construction",
       location: "Abu Dhabi, UAE",
-      salary: "2,200 AED / month",
+      salary: "2,200 AED (₹50,000) / month",
       experience: "2+ Years",
       isFree: true,
       benefits: ["Accommodation", "Medical", "Overtime"],
@@ -134,7 +181,7 @@ export default function Home() {
       title: "Security Guard",
       company: "Farnek Services",
       location: "Dubai, UAE",
-      salary: "2,000 AED / month",
+      salary: "2,000 AED (₹45,000) / month",
       experience: "1+ Years",
       isFree: true,
       benefits: ["Accommodation", "Transportation", "Uniform"],
@@ -148,7 +195,7 @@ export default function Home() {
       title: "Mason (Block & Plaster)",
       company: "Alfanar",
       location: "Jeddah, KSA",
-      salary: "2,400 SAR / month",
+      salary: "2,400 SAR (₹53,000) / month",
       experience: "3+ Years",
       isFree: true,
       benefits: ["Free Food", "Accommodation", "Medical"],
@@ -162,7 +209,7 @@ export default function Home() {
       title: "Welder (6G)",
       company: "NBTC Group",
       location: "Ahmadi, Kuwait",
-      salary: "250 KWD / month",
+      salary: "250 KWD (₹68,000) / month",
       experience: "4+ Years",
       isFree: true,
       benefits: ["Accommodation", "Transportation", "Medical"],
@@ -176,7 +223,7 @@ export default function Home() {
       title: "General Helper",
       company: "Imdaad",
       location: "Dubai, UAE",
-      salary: "1,200 AED / month",
+      salary: "1,200 AED (₹27,000) / month",
       experience: "Fresher Accepted",
       isFree: true,
       benefits: ["Free Food", "Accommodation", "Transportation"],
@@ -190,7 +237,7 @@ export default function Home() {
       title: "Carpenter (Shuttering)",
       company: "DP World",
       location: "Dubai, UAE",
-      salary: "1,800 AED / month",
+      salary: "1,800 AED (₹40,000) / month",
       experience: "2+ Years",
       isFree: true,
       benefits: ["Accommodation", "Medical", "Overtime"],
@@ -254,9 +301,20 @@ export default function Home() {
               </p>
 
               <div className="relative max-w-2xl" ref={searchRef}>
-                <div className="glass-dark rounded-2xl p-2 flex items-center shadow-2xl relative z-20 transition-all focus-within:ring-2 focus-within:ring-blue-500/50">
-                  <div className="flex-1 flex items-center px-4 border-r border-white/10">
-                    <Search className="h-5 w-5 text-slate-400 mr-3" />
+                <div className="glass-dark rounded-2xl p-2 flex items-center shadow-2xl relative z-20 transition-all border-2 border-blue-500/30 hover:border-blue-500/60 focus-within:border-blue-500">
+                  <div className="flex-1 flex items-center px-2 sm:px-4">
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const event = new CustomEvent('open-voice-assistant');
+                        window.dispatchEvent(event);
+                      }}
+                      className="relative p-3 bg-blue-600/20 rounded-xl flex items-center justify-center group hover:bg-blue-600/40 transition-colors mr-3"
+                      title="Speak your job"
+                    >
+                      <Mic className="w-6 h-6 text-blue-400 relative z-10 group-hover:text-blue-300" />
+                      <span className="absolute inset-0 rounded-xl bg-blue-500/40 animate-ping"></span>
+                    </button>
                     <input
                       type="text"
                       value={searchQuery}
@@ -271,8 +329,8 @@ export default function Home() {
                           handleSearch(searchQuery);
                         }
                       }}
-                      placeholder="e.g., Plumber, Electrician, Driver..."
-                      className="w-full bg-transparent border-none focus:ring-0 text-white placeholder-slate-500 py-4 outline-none text-lg font-light"
+                      placeholder="Apna kaam boliye (e.g. 'Bijli ka kaam')..."
+                      className="w-full bg-transparent border-none focus:ring-0 text-white placeholder-slate-400 py-4 outline-none text-lg font-medium"
                     />
                   </div>
                   <button 
@@ -280,9 +338,10 @@ export default function Home() {
                       setShowSuggestions(false);
                       handleSearch(searchQuery);
                     }}
-                    className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-xl font-semibold transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] ml-2 flex items-center gap-2"
+                    className="bg-blue-600 hover:bg-blue-500 text-white px-6 sm:px-8 py-4 rounded-xl font-semibold transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] ml-2 flex items-center gap-2"
                   >
-                    {t("Search")} <ArrowRight className="w-4 h-4" />
+                    <Search className="w-5 h-5" />
+                    <span className="hidden sm:inline">{t("Search")}</span>
                   </button>
                 </div>
 
@@ -461,6 +520,7 @@ export default function Home() {
         </div>
       </section>
 
+
       {/* Trusted Partners / Sliding Logos */}
       <section className="py-10 bg-white border-b border-gray-100 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 text-center">
@@ -520,7 +580,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* 01 Sathi */}
             <div 
               className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
@@ -571,23 +631,7 @@ export default function Home() {
               </p>
             </div>
 
-            {/* 05 Kompally HQ Verify */}
-            <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden flex flex-col">
-              <div className="h-40 w-full overflow-hidden">
-                <img src="https://picsum.photos/seed/hyderabad/400/200" alt="Kompally HQ" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" referrerPolicy="no-referrer" />
-              </div>
-              <div className="p-8 flex-1">
-                <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 -mt-14 relative z-10 border-4 border-white group-hover:bg-blue-600 transition-colors duration-300">
-                  <Building2 className="h-6 w-6 text-blue-600 group-hover:text-white transition-colors" />
-                </div>
-                <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Kompally HQ Verify</h3>
-                <p className="text-slate-500 text-sm leading-relaxed font-light">
-                  We are real. Visit our physical office at Suchitra Road, Kompally, Hyderabad to verify your AI scores and complete your documentation in person.
-                </p>
-              </div>
-            </div>
-
-            {/* 06 Resume-Free Video */}
+            {/* 05 Resume-Free Video */}
             <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
               <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-rose-600 group-hover:scale-110 transition-all duration-300">
                 <Video className="h-7 w-7 text-rose-600 group-hover:text-white transition-colors" />
@@ -598,18 +642,7 @@ export default function Home() {
               </p>
             </div>
 
-            {/* 07 Zero-Fee Policy */}
-            <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-              <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-emerald-600 group-hover:scale-110 transition-all duration-300">
-                <ShieldCheck className="h-7 w-7 text-emerald-600 group-hover:text-white transition-colors" />
-              </div>
-              <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Zero-Fee Policy</h3>
-              <p className="text-slate-500 text-sm leading-relaxed font-light">
-                Ethical recruitment at its core. We charge zero agency fees. We provide total transparency on flight and medical costs so you can plan your future safely.
-              </p>
-            </div>
-
-            {/* 08 Verified B2B Network */}
+            {/* 06 Verified B2B Network */}
             <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
               <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-amber-600 group-hover:scale-110 transition-all duration-300">
                 <Briefcase className="h-7 w-7 text-amber-600 group-hover:text-white transition-colors" />
@@ -906,6 +939,388 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Paisa Ki Baat - Salary Calculator */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-blue-600 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-20"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500 rounded-full blur-[100px] -mr-20 -mt-20 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-500 rounded-full blur-[100px] -ml-20 -mb-20 pointer-events-none"></div>
+
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            <div className="lg:w-1/2 space-y-8">
+              <div className="inline-flex items-center gap-2 bg-white/10 text-white px-4 py-2 rounded-full border border-white/20 text-sm font-semibold tracking-wide uppercase">
+                <Banknote className="w-4 h-4" />
+                Paisa Ki Baat
+              </div>
+              <h2 className="text-4xl md:text-6xl font-display font-bold leading-[1.1] tracking-tight">
+                How much will I save?
+              </h2>
+              <p className="text-xl text-blue-100 font-light leading-relaxed">
+                See your GCC salary in Indian Rupees. With free food and accommodation provided by most verified employers, you can send more money back home.
+              </p>
+              
+              <div className="flex items-center gap-6 pt-4">
+                <div className="flex -space-x-4">
+                  <img className="w-12 h-12 rounded-full border-2 border-blue-600" src="https://picsum.photos/seed/family1/100/100" alt="Family" referrerPolicy="no-referrer" />
+                  <img className="w-12 h-12 rounded-full border-2 border-blue-600" src="https://picsum.photos/seed/family2/100/100" alt="Family" referrerPolicy="no-referrer" />
+                  <img className="w-12 h-12 rounded-full border-2 border-blue-600" src="https://picsum.photos/seed/family3/100/100" alt="Family" referrerPolicy="no-referrer" />
+                </div>
+                <p className="text-sm text-blue-200 font-medium">Build a better future<br/>for your family.</p>
+              </div>
+            </div>
+
+            <div className="lg:w-1/2 w-full">
+              <div className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl text-slate-900 relative">
+                <div className="absolute -top-6 -right-6 bg-emerald-500 text-white w-24 h-24 rounded-full flex items-center justify-center font-bold text-xl shadow-xl rotate-12 border-4 border-white">
+                  70%<br/>Save
+                </div>
+                
+                <h3 className="text-2xl font-bold mb-8">Salary Calculator</h3>
+                
+                <div className="space-y-8">
+                  <div>
+                    <div className="flex justify-between items-center mb-4">
+                      <label className="text-slate-500 font-medium">Select Currency</label>
+                      <select 
+                        value={calcCurrency}
+                        onChange={(e) => {
+                          setCalcCurrency(e.target.value);
+                          // Adjust default amount based on currency
+                          if (['KWD', 'OMR', 'BHD'].includes(e.target.value)) {
+                            if (calcAmount > 1000) setCalcAmount(250);
+                          } else {
+                            if (calcAmount < 1000) setCalcAmount(2000);
+                          }
+                        }}
+                        className="bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-2 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="AED">AED (UAE)</option>
+                        <option value="SAR">SAR (Saudi)</option>
+                        <option value="QAR">QAR (Qatar)</option>
+                        <option value="KWD">KWD (Kuwait)</option>
+                        <option value="OMR">OMR (Oman)</option>
+                        <option value="BHD">BHD (Bahrain)</option>
+                      </select>
+                    </div>
+                    
+                    <div className="flex justify-between items-end mb-2">
+                      <label className="text-slate-500 font-medium">Monthly Salary</label>
+                      <span className="text-3xl font-bold text-blue-600">{calcAmount} {calcCurrency}</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min={['KWD', 'OMR', 'BHD'].includes(calcCurrency) ? 100 : 800} 
+                      max={['KWD', 'OMR', 'BHD'].includes(calcCurrency) ? 1000 : 8000} 
+                      step={['KWD', 'OMR', 'BHD'].includes(calcCurrency) ? 10 : 100}
+                      value={calcAmount}
+                      onChange={(e) => setCalcAmount(Number(e.target.value))}
+                      className="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                    />
+                    <div className="flex justify-between text-xs text-slate-400 mt-2 font-medium">
+                      <span>{['KWD', 'OMR', 'BHD'].includes(calcCurrency) ? '100' : '800'} {calcCurrency}</span>
+                      <span>{['KWD', 'OMR', 'BHD'].includes(calcCurrency) ? '1000+' : '8000+'} {calcCurrency}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-slate-100">
+                    <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-100 relative overflow-hidden">
+                      <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                      <p className="text-emerald-800 font-medium mb-1">In Indian Rupees (Approx)</p>
+                      <p className="text-4xl md:text-5xl font-display font-bold text-emerald-600 mb-4">
+                        ₹{inrEquivalent.toLocaleString('en-IN')} <span className="text-lg text-emerald-600/60 font-medium">/ month</span>
+                      </p>
+                      
+                      <div className="flex items-center gap-3 text-sm text-emerald-700 font-medium bg-white/60 px-4 py-3 rounded-xl border border-emerald-200/50">
+                        <div className="bg-emerald-100 p-1.5 rounded-full">
+                          <CheckCircle className="w-4 h-4 text-emerald-600" />
+                        </div>
+                        Estimated Savings: <strong className="text-lg">₹{estimatedSavings.toLocaleString('en-IN')}</strong>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <p className="text-xs text-slate-400 text-center">
+                    * Exchange rates are approximate. Savings estimate assumes 70% of salary saved due to free food & accommodation provided by employers.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Transparent Ledger (Aapka Kharcha) */}
+      <section className="py-24 bg-white border-t border-slate-100">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-600 px-4 py-2 rounded-full border border-emerald-100 text-sm font-semibold tracking-wide uppercase mb-4">
+              <ShieldCheck className="w-4 h-4" />
+              100% Transparent Ledger
+            </div>
+            <h2 className="text-4xl font-display font-bold text-slate-900 mb-4 tracking-tight">
+              Aapka Kharcha <span className="text-slate-500 font-light">(Your Expenses)</span>
+            </h2>
+            <p className="text-slate-500 text-lg font-light max-w-2xl mx-auto">
+              No hidden agent commissions. You only pay for official government and medical fees.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-100">
+                    <th className="py-5 px-8 font-semibold text-slate-900">Expense Type</th>
+                    <th className="py-5 px-8 font-semibold text-slate-900">Amount</th>
+                    <th className="py-5 px-8 font-semibold text-slate-900">Paid To</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  <tr className="hover:bg-slate-50 transition-colors">
+                    <td className="py-6 px-8 font-medium text-slate-900 flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                        <ShieldCheck className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <span className="text-lg">GulfPath Fee</span>
+                    </td>
+                    <td className="py-6 px-8">
+                      <span className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 font-bold px-4 py-1.5 rounded-full text-lg border border-emerald-200">
+                        <CheckCircle className="w-5 h-5" /> ₹0 (Free)
+                      </span>
+                    </td>
+                    <td className="py-6 px-8 text-slate-500 text-lg">None</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50 transition-colors">
+                    <td className="py-6 px-8 font-medium text-slate-900 flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
+                        <FileText className="w-6 h-6 text-amber-600" />
+                      </div>
+                      <span className="text-lg">Medical (GAMCA)</span>
+                    </td>
+                    <td className="py-6 px-8 font-semibold text-slate-700 text-lg">₹8,000 to ₹12,000</td>
+                    <td className="py-6 px-8 text-slate-500 text-lg">Paid directly to Clinic</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50 transition-colors">
+                    <td className="py-6 px-8 font-medium text-slate-900 flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center shrink-0">
+                        <FileBadge className="w-6 h-6 text-indigo-600" />
+                      </div>
+                      <span className="text-lg">Passport/PCC</span>
+                    </td>
+                    <td className="py-6 px-8 font-semibold text-slate-700 text-lg">₹1,500</td>
+                    <td className="py-6 px-8 text-slate-500 text-lg">Govt Fee</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div className="bg-slate-50 p-6 border-t border-slate-100 text-center">
+              <p className="text-slate-600 font-medium flex items-center justify-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                We will never ask you for cash. Report any agent asking for money in our name.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Live Visa & Flight Tracker */}
+      <section className="py-24 bg-slate-50 border-t border-slate-200">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-display font-bold text-slate-900 mb-4 tracking-tight">
+              Live "Visa & Flight" Tracker
+            </h2>
+            <p className="text-slate-500 text-lg font-light max-w-2xl mx-auto">
+              Track your journey to the Gulf in real-time. No need to call the agent!
+            </p>
+          </div>
+          <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+            <div className="p-8 border-b border-slate-100 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-2xl font-display font-bold flex items-center gap-3">
+                  <Plane className="w-6 h-6" />
+                  Application Status
+                </h3>
+                <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm">
+                  Application ID: #GP-8924
+                </span>
+              </div>
+            </div>
+            
+            <div className="p-8">
+              <div className="relative">
+                {/* Connecting Line */}
+                <div className="absolute left-[27px] top-8 bottom-8 w-1 bg-slate-100 rounded-full z-0"></div>
+                
+                {/* Progress Line */}
+                <div className="absolute left-[27px] top-8 h-[40%] w-1 bg-emerald-500 rounded-full z-0 transition-all duration-1000"></div>
+
+                <div className="space-y-8 relative z-10">
+                  {/* Step 1: Trade Test */}
+                  <div className="flex items-start gap-6 group">
+                    <div className="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/30 border-4 border-white transition-transform group-hover:scale-110">
+                      <CheckCircle className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="pt-3">
+                      <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        Trade Test Passed
+                        <span className="text-xs font-medium bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">Completed</span>
+                      </h3>
+                      <p className="text-slate-500 text-sm mt-1">You scored 8.5/10 in your Residential Electrician test.</p>
+                      <p className="text-xs text-slate-400 mt-2 font-medium">Oct 12, 2023 • 10:30 AM</p>
+                    </div>
+                  </div>
+
+                  {/* Step 2: Medical */}
+                  <div className="flex items-start gap-6 group">
+                    <div className="w-14 h-14 rounded-full bg-amber-400 flex items-center justify-center shrink-0 shadow-lg shadow-amber-400/30 border-4 border-white transition-transform group-hover:scale-110 relative">
+                      <div className="absolute inset-0 rounded-full border-2 border-amber-400 animate-ping opacity-20"></div>
+                      <div className="w-4 h-4 bg-white rounded-full animate-pulse"></div>
+                    </div>
+                    <div className="pt-3">
+                      <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        Medical in Progress
+                        <span className="text-xs font-medium bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full animate-pulse">In Progress</span>
+                      </h3>
+                      <p className="text-slate-500 text-sm mt-1">GAMCA medical appointment scheduled at Al-Razi Clinic.</p>
+                      <button className="mt-3 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-lg transition-colors inline-flex items-center gap-2">
+                        <MapPin className="w-4 h-4" /> View Clinic Location
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Step 3: Visa */}
+                  <div className="flex items-start gap-6 group opacity-50">
+                    <div className="w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center shrink-0 border-4 border-white transition-transform group-hover:scale-110">
+                      <FileText className="w-6 h-6 text-slate-400" />
+                    </div>
+                    <div className="pt-3">
+                      <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        Visa Stamping
+                        <span className="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">Pending</span>
+                      </h3>
+                      <p className="text-slate-500 text-sm mt-1">Waiting for medical clearance to submit passport to embassy.</p>
+                    </div>
+                  </div>
+
+                  {/* Step 4: Flight */}
+                  <div className="flex items-start gap-6 group opacity-50">
+                    <div className="w-14 h-14 rounded-full bg-slate-200 flex items-center justify-center shrink-0 border-4 border-white transition-transform group-hover:scale-110">
+                      <Plane className="w-6 h-6 text-slate-400" />
+                    </div>
+                    <div className="pt-3">
+                      <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        Flight Ticket Issued
+                        <span className="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">Pending</span>
+                      </h3>
+                      <p className="text-slate-500 text-sm mt-1">Final step before departure. Ticket details will appear here.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-slate-50 p-4 border-t border-slate-100 text-center">
+              <p className="text-sm text-slate-500">
+                Need help? <button className="text-blue-600 font-semibold hover:underline">Talk to Sathi</button>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Track My File Section */}
+      <section className="py-16 bg-slate-50 border-b border-slate-200">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-3xl p-8 md:p-12 shadow-xl border border-slate-100 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-3xl -mr-20 -mt-20"></div>
+            
+            <div className="relative z-10 text-center mb-10">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-100 text-blue-600 mb-6">
+                <Plane className="w-8 h-8" />
+              </div>
+              <h2 className="text-3xl md:text-4xl font-display font-bold text-slate-900 mb-4">
+                Track My File
+              </h2>
+              <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+                Enter your Passport Number or Application ID to check your visa progress. No need to call the office!
+              </p>
+            </div>
+
+            <form onSubmit={handleTrack} className="relative z-10 max-w-2xl mx-auto mb-12">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                  <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-400" />
+                  <input 
+                    type="text" 
+                    value={trackingNumber}
+                    onChange={(e) => setTrackingNumber(e.target.value)}
+                    placeholder="Enter Passport No. (e.g. Z1234567)" 
+                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-xl text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  />
+                </div>
+                <button 
+                  type="submit"
+                  className="bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 rounded-xl font-semibold transition-all shadow-md flex items-center justify-center gap-2 whitespace-nowrap"
+                >
+                  <Search className="w-5 h-5" />
+                  Check Status
+                </button>
+              </div>
+            </form>
+
+            {trackingStatus !== null && (
+              <div className="relative z-10 max-w-3xl mx-auto bg-slate-50 rounded-2xl p-8 border border-slate-200">
+                <h3 className="text-xl font-bold text-slate-900 mb-8 text-center">
+                  Application Status for <span className="text-blue-600">{trackingNumber.toUpperCase()}</span>
+                </h3>
+                
+                <div className="relative">
+                  {/* Progress Line */}
+                  <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-200 -translate-y-1/2 rounded-full hidden sm:block"></div>
+                  <div 
+                    className="absolute top-1/2 left-0 h-1 bg-emerald-500 -translate-y-1/2 rounded-full transition-all duration-1000 hidden sm:block"
+                    style={{ width: `${(trackingStatus / 3) * 100}%` }}
+                  ></div>
+
+                  {/* Steps */}
+                  <div className="relative flex flex-col sm:flex-row justify-between gap-6 sm:gap-0">
+                    {[
+                      { label: "Selected", icon: <CheckCircle className="w-5 h-5" /> },
+                      { label: "Medical Done", icon: <FileBadge className="w-5 h-5" /> },
+                      { label: "Visa Stamped", icon: <FileText className="w-5 h-5" /> },
+                      { label: "Ticket Issued", icon: <Plane className="w-5 h-5" /> }
+                    ].map((step, index) => {
+                      const isCompleted = index <= trackingStatus;
+                      const isCurrent = index === trackingStatus;
+                      
+                      return (
+                        <div key={index} className="flex sm:flex-col items-center gap-4 sm:gap-0">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 relative z-10 transition-colors duration-500 shrink-0 ${
+                            isCompleted 
+                              ? 'bg-emerald-500 border-white text-white shadow-lg' 
+                              : 'bg-slate-100 border-white text-slate-400'
+                          }`}>
+                            {step.icon}
+                            {isCurrent && (
+                              <span className="absolute -inset-2 rounded-full border-2 border-emerald-500 opacity-20 animate-ping"></span>
+                            )}
+                          </div>
+                          <p className={`sm:mt-4 text-sm font-bold sm:text-center sm:w-24 ${
+                            isCompleted ? 'text-slate-900' : 'text-slate-400'
+                          }`}>
+                            {step.label}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* Worker of the Month Spotlight */}
       <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white border-t border-slate-100">
         <div className="max-w-7xl mx-auto">
@@ -997,6 +1412,68 @@ export default function Home() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Top 5 FAQs Section */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white border-t border-slate-100">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-full border border-blue-100 text-sm font-semibold tracking-wide uppercase mb-4">
+              <ShieldCheck className="w-4 h-4" />
+              The Trust Manual
+            </div>
+            <h2 className="text-4xl font-display font-bold text-slate-900 mb-4 tracking-tight">
+              Top 5 Frequently Asked Questions
+            </h2>
+            <p className="text-slate-500 text-lg font-light max-w-2xl mx-auto">
+              Everything you need to know about working in the Gulf safely and securely.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden mb-10">
+            <div className="divide-y divide-slate-100">
+              {faqCategories[0].faqs.slice(0, 5).map((faq) => (
+                <div key={faq.id} className="group">
+                  <button
+                    onClick={() => toggleFaq(faq.id)}
+                    className="w-full px-8 py-6 flex items-center justify-between text-left focus:outline-none hover:bg-slate-50 transition-colors"
+                  >
+                    <span className="text-lg font-semibold text-slate-900 group-hover:text-blue-600 transition-colors pr-8">
+                      {faq.question}
+                    </span>
+                    <span className="text-slate-400 shrink-0">
+                      {openFaqId === faq.id ? (
+                        <ChevronUp className="w-6 h-6" />
+                      ) : (
+                        <ChevronDown className="w-6 h-6" />
+                      )}
+                    </span>
+                  </button>
+                  
+                  <div 
+                    className={`px-8 overflow-hidden transition-all duration-300 ease-in-out ${
+                      openFaqId === faq.id ? 'max-h-96 pb-6 opacity-100' : 'max-h-0 opacity-0'
+                    }`}
+                  >
+                    <div className="text-slate-600 text-lg font-light leading-relaxed bg-blue-50/50 p-6 rounded-2xl border border-blue-100/50">
+                      {renderAnswer(faq.answer)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="text-center">
+            <Link 
+              to="/faq" 
+              className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold rounded-2xl text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
+            >
+              Read All FAQs
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
           </div>
         </div>
       </section>

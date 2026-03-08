@@ -19,6 +19,9 @@ import Profile from "./pages/Profile";
 import PDBHub from "./pages/PDBHub";
 import MockInterview from "./pages/MockInterview";
 import Contact from "./pages/Contact";
+import FAQ from "./pages/FAQ";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import EmployerDashboard from "./pages/EmployerDashboard";
 import StaffDashboard from "./pages/StaffDashboard";
 import VoiceAssistant from "./components/VoiceAssistant";
@@ -59,17 +62,13 @@ function AppContent() {
               </ProtectedRoute>
             } 
           />
-          <Route 
-            path="/pdb-hub" 
-            element={
-              <ProtectedRoute allowedRole="worker">
-                <PDBHub />
-              </ProtectedRoute>
-            } 
-          />
+          <Route path="/pdb-hub" element={<ProtectedRoute allowedRole="worker"><PDBHub /></ProtectedRoute>} />
           <Route path="/mock-interview" element={<MockInterview />} />
           <Route path="/staff-dashboard" element={<StaffDashboard />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
         </Routes>
       </main>
       {!isEmployerDashboard && <Footer />}

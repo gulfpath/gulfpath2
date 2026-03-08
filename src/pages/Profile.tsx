@@ -1,14 +1,127 @@
 import React, { useState } from 'react';
-import { User, Briefcase, FileText, Upload, CheckCircle, MapPin, Phone, Mail, Award, Edit2, Plus, ShieldCheck, X, Save, Trash2, QrCode, Mic, Video, Plane, Calendar, Clock } from 'lucide-react';
+import { User, Briefcase, FileText, Upload, CheckCircle, MapPin, Phone, Mail, Award, Edit2, Plus, ShieldCheck, X, Save, Trash2, QrCode, Mic, Video, Plane, Calendar, Clock, Camera, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { SathiProfileBuilder } from '../components/SathiProfileBuilder';
+import { GoogleGenAI } from "@google/genai";
+import confetti from 'canvas-confetti';
 
 export default function Profile() {
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditing, setIsEditing] = useState(false);
   const [editSection, setEditSection] = useState<'overview' | 'experience' | 'documents' | 'header' | null>(null);
   const [showPassport, setShowPassport] = useState(false);
+
+  // Ustad Journey State
+  const [level, setLevel] = useState(1);
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [isEnhancingAvatar, setIsEnhancingAvatar] = useState(false);
+  const [showCoronation, setShowCoronation] = useState(false);
+
+  // Levels definition
+  const levels = [
+    { id: 1, name: 'Identity', req: 'Basic Voice Register', reward: 'Standard Avatar', sathi: "Shabash! Aapne pehla kadam utha liya hai." },
+    { id: 2, name: 'Professional', req: 'Upload Selfie (AI Studio)', reward: 'Blue Polo Avatar', sathi: "Wah! Ab aap ek dum 'Dubai Ready' lag rahe hain." },
+    { id: 3, name: 'Certified', req: 'Complete 10x10 Trade Test', reward: 'Silver Ring', sathi: "Aapne hunar sabit kar diya! Ab aap Silver Ustad hain." },
+    { id: 4, name: 'Verified', req: 'Kompally HQ Visit', reward: 'Gold Ring + Green Check', sathi: "Mubarak ho! Aap ab Verified Gold Ustad hain. Ab visa door nahi!" },
+  ];
+
+  // Avatar Border Logic
+  const getAvatarBorder = () => {
+    if (level >= 4) return 'ring-4 ring-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.6)]';
+    if (level === 3) return 'ring-4 ring-slate-300 shadow-[0_0_15px_rgba(203,213,225,0.5)]';
+    if (level === 2) return 'ring-4 ring-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.4)]';
+    return 'ring-4 ring-slate-100';
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsEnhancingAvatar(true);
+    try {
+      if ((window as any).aistudio && !(await (window as any).aistudio.hasSelectedApiKey())) {
+        await (window as any).aistudio.openSelectKey();
+      }
+      
+      const apiKey = process.env.API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Data = (reader.result as string).split(',')[1];
+        const mimeType = file.type;
+
+        const ai = new GoogleGenAI({ apiKey: apiKey });
+        
+        const response = await ai.models.generateContent({
+          model: 'gemini-3.1-flash-image-preview',
+          contents: {
+            parts: [
+              {
+                inlineData: {
+                  data: base64Data,
+                  mimeType: mimeType,
+                },
+              },
+              {
+                text: "Take the user's uploaded selfie. Maintain the facial features with 100% accuracy. Replace the background with a professional, slightly blurred industrial workshop. Replace the user's current clothing with a clean, well-fitted navy blue polo shirt featuring a small 'GulfPath' logo on the chest. Ensure lighting is bright and professional, as if taken in a studio. Output a high-resolution circular avatar.",
+              },
+            ],
+          },
+          config: {
+            imageConfig: {
+              aspectRatio: "1:1",
+              imageSize: "1K"
+            }
+          }
+        });
+
+        for (const part of response.candidates?.[0]?.content?.parts || []) {
+          if (part.inlineData) {
+            const enhancedBase64 = part.inlineData.data;
+            setAvatarUrl(`data:image/png;base64,${enhancedBase64}`);
+            if (level < 2) setLevel(2);
+            break;
+          }
+        }
+        setIsEnhancingAvatar(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Error enhancing avatar:", error);
+      setIsEnhancingAvatar(false);
+    }
+  };
+
+  const handleGoldCoronation = () => {
+    setLevel(4);
+    setShowCoronation(true);
+    
+    const duration = 3000;
+    const end = Date.now() + duration;
+
+    const frame = () => {
+      confetti({
+        particleCount: 5,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: ['#FBBF24', '#F59E0B', '#D97706']
+      });
+      confetti({
+        particleCount: 5,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: ['#FBBF24', '#F59E0B', '#D97706']
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    };
+    frame();
+  };
 
   const [candidate, setCandidate] = useState({
     name: 'Rajesh Kumar',
@@ -124,6 +237,87 @@ export default function Profile() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       
+      {/* Gold Ustad Coronation Modal */}
+      <AnimatePresence>
+        {showCoronation && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+            <div className="absolute inset-0 bg-[#0B1120]/90 backdrop-blur-md" onClick={() => setShowCoronation(false)} />
+            
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0, y: 50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 50 }}
+              className="relative bg-gradient-to-b from-[#1e293b] to-[#0f172a] border border-yellow-500/30 rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden text-center p-8"
+            >
+              {/* Glowing Background Effect */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-64 bg-yellow-500/20 blur-[100px] rounded-full pointer-events-none"></div>
+              
+              <div className="relative z-10">
+                <h2 className="text-3xl font-display font-bold text-white mb-2">
+                  Mubarak ho!
+                </h2>
+                <p className="text-xl text-yellow-400 font-medium mb-8">
+                  Aap ab <span className="font-bold">Verified Gold Ustad</span> hain!
+                </p>
+                
+                <div className="relative inline-block mb-8">
+                  <div className="w-40 h-40 rounded-full border-4 border-yellow-400 shadow-[0_0_40px_rgba(250,204,21,0.5)] overflow-hidden bg-slate-800 mx-auto">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="Gold Ustad" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400">
+                        <User className="w-16 h-16" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-4 py-1.5 rounded-full border-2 border-[#0f172a] shadow-lg flex items-center gap-1 font-bold text-sm whitespace-nowrap">
+                    <ShieldCheck className="w-4 h-4" /> Kompally Verified
+                  </div>
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-white p-2 rounded-full border-2 border-[#0f172a] shadow-lg">
+                    <Star className="w-6 h-6 fill-white" />
+                  </div>
+                </div>
+                
+                <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-6 mb-8 text-left">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="bg-blue-500/20 p-2 rounded-full text-blue-400 shrink-0">
+                      <Mic className="w-5 h-5" />
+                    </div>
+                    <p className="text-slate-300 text-sm leading-relaxed italic">
+                      "Bhai, aaj aapne sabit kar diya ki aap apne kaam ke asli mahir hain. Aapka profile ab Gulf ki top companies ko <strong className="text-white">Priority</strong> par dikhaya jayega."
+                    </p>
+                  </div>
+                  
+                  <ul className="space-y-3">
+                    <li className="flex items-center justify-between text-sm">
+                      <span className="text-slate-400">Trade Test:</span>
+                      <span className="text-white font-bold flex items-center gap-1">10/10 (Passed) <CheckCircle className="w-4 h-4 text-emerald-400" /></span>
+                    </li>
+                    <li className="flex items-center justify-between text-sm">
+                      <span className="text-slate-400">Documents:</span>
+                      <span className="text-white font-bold flex items-center gap-1">Physical Verification Done <CheckCircle className="w-4 h-4 text-emerald-400" /></span>
+                    </li>
+                    <li className="flex items-center justify-between text-sm pt-2 border-t border-slate-700">
+                      <span className="text-slate-400">Status:</span>
+                      <span className="text-yellow-400 font-bold flex items-center gap-1">READY FOR DEPLOYMENT <Plane className="w-4 h-4" /></span>
+                    </li>
+                  </ul>
+                </div>
+                
+                <div className="space-y-3">
+                  <button onClick={() => setShowCoronation(false)} className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-slate-900 font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-yellow-500/20">
+                    Mere liye sabse acche kaam dikhayein
+                  </button>
+                  <button onClick={() => setShowCoronation(false)} className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-xl transition-all border border-slate-600">
+                    Ghar walon ko khush khabri dein
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Digital Skill Passport Modal */}
       <AnimatePresence>
         {showPassport && (
@@ -147,8 +341,12 @@ export default function Profile() {
                 </button>
                 
                 <div className="relative z-10 flex flex-col items-center">
-                  <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-blue-600 text-3xl font-bold shadow-lg border-4 border-blue-400 mb-3">
-                    {candidate.name.charAt(0)}
+                  <div className={`w-20 h-20 bg-white rounded-full flex items-center justify-center text-blue-600 text-3xl font-bold shadow-lg ${getAvatarBorder()} mb-3 overflow-hidden`}>
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      candidate.name.charAt(0)
+                    )}
                   </div>
                   <h2 className="text-2xl font-bold text-white">{candidate.name}</h2>
                   <p className="text-blue-200 font-medium">{candidate.title}</p>
@@ -280,8 +478,41 @@ export default function Profile() {
             </div>
           ) : (
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-              <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center text-blue-600 text-4xl font-bold shadow-lg border-4 border-blue-100">
-                {candidate.name.charAt(0)}
+              <div className="relative group">
+                <div className={`w-32 h-32 bg-white rounded-full flex items-center justify-center text-blue-600 text-4xl font-bold shadow-lg ${getAvatarBorder()} transition-all duration-500 overflow-hidden relative z-10`}>
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    candidate.name.charAt(0)
+                  )}
+                  
+                  {/* Upload Overlay */}
+                  <label htmlFor="avatar-upload" className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                    <Camera className="w-6 h-6 text-white mb-1" />
+                    <span className="text-white text-[10px] font-bold uppercase tracking-wider">AI Enhance</span>
+                  </label>
+                  <input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+                  
+                  {isEnhancingAvatar && (
+                    <div className="absolute inset-0 bg-blue-900/90 flex flex-col items-center justify-center z-20">
+                      <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mb-1"></div>
+                      <span className="text-white text-[10px] font-bold text-center px-1">AI Studio...</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Kompally Verified Seal */}
+                {level >= 4 && (
+                  <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-2 rounded-full border-2 border-white shadow-lg z-20" title="Kompally Verified">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                )}
+                {/* Master Ustad Crown for Gold */}
+                {level >= 4 && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-white p-1.5 rounded-full border-2 border-white shadow-lg z-20">
+                    <Star className="w-4 h-4 fill-white" />
+                  </div>
+                )}
               </div>
               <div className="text-center md:text-left mt-4 md:mt-0">
                 <h1 className="text-3xl font-bold">{candidate.name}</h1>
@@ -319,6 +550,78 @@ export default function Profile() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Ustad Journey Meter */}
+        <div className="bg-white border-b border-gray-100 p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <Award className="w-6 h-6 text-yellow-500" />
+              Your Journey to Gold Ustad
+            </h3>
+            <span className="bg-blue-50 text-blue-700 text-sm font-bold px-3 py-1 rounded-full border border-blue-100">
+              Level {level} of 4
+            </span>
+          </div>
+          
+          <div className="relative">
+            {/* Horizontal Timeline Line for Desktop, Vertical for Mobile */}
+            <div className="hidden md:block absolute top-6 left-12 right-12 h-0.5 bg-slate-100"></div>
+            <div className="hidden md:block absolute top-6 left-12 h-0.5 bg-blue-500 transition-all duration-1000" style={{ width: `${((level - 1) / 3) * 100}%` }}></div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
+              {levels.map((lvl, idx) => {
+                const isCompleted = level >= lvl.id;
+                const isNext = level + 1 === lvl.id;
+                
+                return (
+                  <div key={lvl.id} className={`flex flex-col items-center text-center ${!isCompleted && !isNext ? 'opacity-50' : ''}`}>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 border-4 mb-3 transition-all duration-500 ${
+                      isCompleted ? 'bg-blue-500 border-blue-100 text-white' : 
+                      isNext ? 'bg-white border-blue-500 text-blue-500 animate-pulse shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 
+                      'bg-slate-100 border-white text-slate-400'
+                    }`}>
+                      {isCompleted ? <CheckCircle className="w-5 h-5" /> : <span className="font-bold">{lvl.id}</span>}
+                    </div>
+                    
+                    <h4 className={`font-bold mb-1 ${isCompleted ? 'text-slate-900' : isNext ? 'text-blue-600' : 'text-slate-500'}`}>
+                      {lvl.name}
+                    </h4>
+                    <p className="text-xs text-slate-500 mb-2 h-8">{lvl.req}</p>
+                    
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 px-2 py-1 rounded border border-slate-100 mb-3">
+                      {lvl.reward}
+                    </span>
+                    
+                    {isNext && (
+                      <div className="w-full bg-blue-50 border border-blue-100 rounded-lg p-3 mt-auto relative">
+                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-blue-50 rotate-45 border-t border-l border-blue-100"></div>
+                        <p className="text-xs text-blue-800 italic font-medium relative z-10">
+                          "{lvl.sathi}"
+                        </p>
+                        
+                        {lvl.id === 2 && (
+                          <button onClick={() => document.getElementById('avatar-upload')?.click()} className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-xs font-bold transition-colors flex items-center justify-center gap-1">
+                            <Camera className="w-3 h-3" /> Upload Selfie
+                          </button>
+                        )}
+                        {lvl.id === 3 && (
+                          <button onClick={() => setLevel(3)} className="mt-3 w-full bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-md text-xs font-bold transition-colors flex items-center justify-center gap-1">
+                            <FileText className="w-3 h-3" /> Take Test
+                          </button>
+                        )}
+                        {lvl.id === 4 && (
+                          <button onClick={handleGoldCoronation} className="mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-md text-xs font-bold transition-colors flex items-center justify-center gap-1">
+                            <MapPin className="w-3 h-3" /> HQ Visit
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         {/* Navigation Tabs */}
@@ -606,7 +909,7 @@ export default function Profile() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Required Documents Section */}
                     <div className="col-span-1 md:col-span-2 mb-2">
-                      <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Required for GCC Deployment</h4>
+                      <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">GulfPath Digital Vault - Core Documents</h4>
                     </div>
                     
                     <div className="flex items-center justify-between p-4 border border-blue-200 bg-blue-50/50 rounded-xl hover:border-blue-300 transition-colors">
@@ -626,6 +929,23 @@ export default function Profile() {
                       </div>
                     </div>
 
+                    <div className="flex items-center justify-between p-4 border border-emerald-200 bg-emerald-50/50 rounded-xl hover:border-emerald-300 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
+                          <Award className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 text-sm">10x10 Trade Test Report</p>
+                          <p className="text-xs text-emerald-600 font-medium mt-0.5">Score: 8.5/10 (Passed)</p>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">
+                          <CheckCircle className="w-3 h-3" /> Auto-Saved
+                        </span>
+                      </div>
+                    </div>
+
                     <div className="flex items-center justify-between p-4 border border-amber-200 bg-amber-50/50 rounded-xl hover:border-amber-300 transition-colors">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600">
@@ -640,6 +960,23 @@ export default function Profile() {
                         <button className="text-xs font-medium text-white bg-amber-500 hover:bg-amber-600 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
                           <Upload className="w-3 h-3" /> Upload
                         </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border border-slate-200 bg-slate-50/50 rounded-xl hover:border-slate-300 transition-colors opacity-60">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center text-slate-500">
+                          <Plane className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 text-sm">Stamped Work Visa</p>
+                          <p className="text-xs text-slate-500 font-medium mt-0.5">Pending Approval</p>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-xs font-medium text-slate-500 bg-slate-200 px-2 py-1 rounded-full">
+                          Awaiting
+                        </span>
                       </div>
                     </div>
 
@@ -678,9 +1015,9 @@ export default function Profile() {
                       <ShieldCheck className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-blue-900 mb-1">Secure Document Vault</h4>
+                      <h4 className="font-semibold text-blue-900 mb-1">GulfPath Digital Vault</h4>
                       <p className="text-sm text-blue-800/80 leading-relaxed">
-                        Your documents are securely stored and only shared with verified employers when you apply for jobs. GulfPath uses enterprise-grade encryption to protect your sensitive information.
+                        Your documents are securely stored in the cloud. Even if you lose your physical copies, you can always access your 10x10 Report, Passport, and Visa right here on your phone. We use enterprise-grade encryption to protect your sensitive information.
                       </p>
                     </div>
                   </div>

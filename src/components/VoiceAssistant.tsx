@@ -143,7 +143,7 @@ const SuccessView = ({ userData }: { userData: any }) => {
           <li className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" /> Aadhaar Card (Linked to mobile)</li>
           <li className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" /> 10 White-Background Photos</li>
           <li className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" /> Experience Certificates (If any)</li>
-          <li className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" /> Medical Fee Ready (Keep ₹15,000 aside for GAMCA)</li>
+          <li className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" /> Medical Fee Ready (Keep ₹10,000-₹15,000 aside for GAMCA)</li>
           <li className="flex items-start gap-3"><CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" /> Clean Clothes (For video profile)</li>
         </ul>
       </div>
@@ -266,7 +266,7 @@ export default function VoiceAssistant() {
       contextSpecificInstructions = `
 **Phase 1: The Introduction (The Hook)**
 - Start with: "Namaste! Main Sathi hoon GulfPath se. Humara kaam hai aapko Dubai aur Saudi mein bina kisi agent-fee ke sahi kaam dilana. Humara bada daftar Hyderabad, Kompally mein hai, isliye aap humpar pura bharosa kar sakte hain."
-- Explain: "GulfPath par hum aapse koi recruitment fee nahi lete. Lekin yaad rakhein, flight tickets free nahi milti aur GAMCA medical ka kharcha (₹5,000-₹8,000) aapko khud dena hoga."
+- Explain: "GulfPath par hum aapse koi recruitment fee nahi lete. Lekin yaad rakhein, flight tickets free nahi milti aur GAMCA medical ka kharcha (₹10,000-₹15,000) aapko khud dena hoga."
 `;
     }
 

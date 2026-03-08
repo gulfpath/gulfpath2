@@ -243,7 +243,7 @@ Return ONLY a valid JSON object. Do not include any conversational text.`,
                         <h4 className="font-semibold text-amber-900 text-sm">Action Required</h4>
                         <p className="text-amber-800 text-xs mt-1">
                           {!extractedData.visa_status && "• Please mention your visa status or passport type (ECR/ECNR). "}
-                          {!extractedData.medical_confirmed && "• Remember: You will need to pay for your own GAMCA medical test in India (approx ₹5,000-₹8,000). Visa and tickets are free."}
+                          {!extractedData.medical_confirmed && "• Remember: You will need to pay for your own GAMCA medical test in India (approx ₹10,000-₹15,000). Visa and tickets are free."}
                         </p>
                       </div>
                     </div>

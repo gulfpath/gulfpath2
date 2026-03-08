@@ -40,6 +40,7 @@ export default function Navbar() {
     ...(userRole === 'worker' ? [{ name: "My Profile", path: "/profile" }] : []),
     ...(userRole === 'worker' ? [{ name: "PDB Hub", path: "/pdb-hub" }] : []),
     ...(userRole === 'employer' ? [{ name: "Employer Portal", path: "/employer-dashboard" }] : []),
+    { name: "FAQ", path: "/faq" },
     { name: "Contact Us", path: "/contact" },
   ];
 

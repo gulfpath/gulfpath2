@@ -553,7 +553,7 @@ When generating the feedback for the tool, look for these 3 specific markers:
             <div>
               <p className="text-amber-400 font-bold text-sm">GulfPath Transparency Notice</p>
               <p className="text-amber-200/80 text-sm mt-1">
-                We charge ZERO recruitment fees. However, Flight Tickets are NOT free and GAMCA Medical (approx. ₹5,000-₹8,000) is paid by the candidate.
+                We charge ZERO recruitment fees. However, Flight Tickets are NOT free and GAMCA Medical (approx. ₹10,000-₹15,000) is paid by the candidate.
               </p>
             </div>
           </div>

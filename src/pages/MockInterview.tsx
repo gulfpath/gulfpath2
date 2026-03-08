@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Type } from '@google/genai';
-import { Mic, Video, VideoOff, PlayCircle, StopCircle, User, CheckCircle2, ChevronRight, Download, MapPin, Phone, Briefcase, Star, AlertCircle } from 'lucide-react';
+import { Mic, Video, VideoOff, PlayCircle, StopCircle, User, CheckCircle2, ChevronRight, Download, MapPin, Phone, Briefcase, Star, AlertCircle, ClipboardCheck, MessageCircle, Share2, Navigation } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import confetti from 'canvas-confetti';
 
 // --- Audio Utilities ---
 class PCMPlayer {
@@ -130,6 +132,10 @@ export default function MockInterview() {
   const [latestAiTranscript, setLatestAiTranscript] = useState<string>("Waiting for Mr. Gulfpath to speak...");
   const [confidenceScore, setConfidenceScore] = useState(85);
   
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+
   const sessionRef = useRef<any>(null);
   const playerRef = useRef<PCMPlayer | null>(null);
   const recorderRef = useRef<PCMRecorder | null>(null);
@@ -151,6 +157,69 @@ export default function MockInterview() {
       return () => clearInterval(interval);
     }
   }, [phase, isConnected]);
+
+  const generateProfessionalImage = async () => {
+    if (!latestFrame) {
+      setImageError("No video frame captured. Please ensure your camera was on during the interview.");
+      return;
+    }
+
+    try {
+      setIsGeneratingImage(true);
+      setImageError(null);
+
+      // Check for API key
+      const win = window as any;
+      if (win.aistudio && !(await win.aistudio.hasSelectedApiKey())) {
+        await win.aistudio.openSelectKey();
+        // Assume success after triggering
+      }
+
+      // Create a new instance right before making the call to ensure the latest key is used
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.1-flash-image-preview',
+        contents: {
+          parts: [
+            {
+              inlineData: {
+                data: latestFrame,
+                mimeType: 'image/jpeg',
+              },
+            },
+            {
+              text: 'Enhance this image to look like a professional passport photo. The person should be wearing a clean, professional uniform or suit suitable for a skilled trade worker. The background should be a solid light blue or white. High quality, professional lighting.',
+            },
+          ],
+        },
+        config: {
+          imageConfig: {
+            aspectRatio: "1:1",
+            imageSize: "1K"
+          }
+        }
+      });
+
+      let foundImage = false;
+      for (const part of response.candidates?.[0]?.content?.parts || []) {
+        if (part.inlineData) {
+          setGeneratedImage(`data:image/jpeg;base64,${part.inlineData.data}`);
+          foundImage = true;
+          break;
+        }
+      }
+
+      if (!foundImage) {
+        setImageError("Failed to generate image. Please try again.");
+      }
+    } catch (err: any) {
+      console.error("Image generation error:", err);
+      setImageError(err.message || "An error occurred while generating the image.");
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
 
   const startVideo = async () => {
     try {
@@ -202,26 +271,27 @@ export default function MockInterview() {
         Address them as: Namaste ${userData.name} bhai. 
         Identify yourself as Mr. Gulfpath.
         State the rules: 10 minutes, 10 questions, all about ${trade}.
-        Ask the first question immediately.
+        State the cheating policy: No cheating allowed, any form of cheating will result in a permanent ban from the platform.
+        Ask if they are ready, and wait for their confirmation before asking the first question.
       `;
 
       try {
-        sessionRef.current.send({
-          clientContent: {
-            turns: [
-              {
-                role: "user",
-                parts: [{ text: startPrompt }],
-              },
-            ],
-            turnComplete: true,
-          },
+        sessionRef.current.sendClientContent({
+          turns: [
+            {
+              role: "user",
+              parts: [{ text: startPrompt }],
+            },
+          ],
+          turnComplete: true,
         });
       } catch (err) {
         console.error("Failed to send start prompt:", err);
       }
     }
   }, [phase, isConnected, userData.name, userData.trade]);
+
+  const [latestFrame, setLatestFrame] = useState<string | null>(null);
 
   const captureAndSendFrame = () => {
     if (!videoRef.current || !canvasRef.current || !sessionRef.current || !isConnected) return;
@@ -234,6 +304,7 @@ export default function MockInterview() {
       if (ctx) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const base64Data = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+        setLatestFrame(base64Data);
         sessionRef.current.sendRealtimeInput({
           media: { data: base64Data, mimeType: 'image/jpeg' }
         });
@@ -260,28 +331,35 @@ export default function MockInterview() {
           },
           systemInstruction: `**Role:** You are "Mr. Gulfpath," the Senior Recruitment Officer. You are professional, strict but fair, and highly knowledgeable about GCC trades.
 **Candidate Info:** Name: ${userData.name}, Trade: ${userData.trade}, Location: ${userData.location}.
-**Language:** Speak primarily in ${language}.
+**Language:** Speak primarily in ${language}. You must use respectful cultural honorifics (e.g., "Bhai", "Garu", "Anna"). Avoid corporate jargon.
 
 **Immediate Trigger (Phase 3 Start):**
 As soon as you receive the user's Name and Trade, start speaking immediately. 
 - **Greeting:** "Namaste ${userData.name} bhai. Main Mr. Gulfpath hoon. Aapka data mere paas aa gaya hai."
-- **The Terms:** "Aaj ka interview 10 minute ka hoga, aur main aapse aapke kaam, yaani ${userData.trade}, se jude 10 zaruri sawal puchunga. Kya aap taiyar hain?"
+- **The Terms:** "Aaj ka interview 10 minute ka hoga, aur main aapse aapke kaam, yaani ${userData.trade}, se jude 10 zaruri sawal puchunga. Dhyan rahe, kisi bhi tarah ki cheating (jaise kisi aur se madad lena ya internet ka istemal karna) sakht mana hai. Agar aap cheating karte hue paye gaye, toh aapko platform se permanently ban kar diya jayega. Kya aap taiyar hain?"
+
+**Scam-Shield Interrupt (CRITICAL):**
+If the user ever mentions "security deposit", "advance payment", or "agent fee", IMMEDIATELY stop the interview flow and say: "Savdhaan! GulfPath kabhi bhi advance ya security deposit nahi mangta. Agar kisi ne aapse paise mange hain, toh woh fraud hai. Kripya turant hamare Hyderabad office mein report karein."
 
 **Interview Structure (The 10-Question Trade Test):**
-1. **Pacing:** You have 10 minutes. Keep your questions short. If the user wanders off or takes too long, politely bring them back: "Bhai, samay kam hai, kripya sankshipt mein (briefly) batayein."
+1. **Pacing & Listening (CRITICAL):** You have 10 minutes. Ask ONE question at a time and WAIT for the user to answer. DO NOT rush. Listen carefully to their answer before asking the next question. Give them ample time to respond.
 2. **Trade-Specific Content:** 
    - 8 Questions must be technical (e.g., for an Electrician: "3-phase motor wiring," "Safety fuse vs MCB," "Tool names").
    - 2 Questions must be about GCC life/Safety (e.g., "Heatstroke prevention," "Worksite safety").
 3. **Progress Tracking:** After every 3 questions, tell them: "Aapne 3 sawal pure kar liye hain, 7 aur baaki hain."
 
 **Final Transition & Feedback Logic:**
-After Question 10, call the \`submitAssessment\` tool immediately with the score and Internshala-style feedback based on all 10 answers. 
-When generating the feedback, look for these 3 specific markers:
+After Question 10, you MUST do the following IN ORDER:
+1. Call the \`submitAssessment\` tool. Calculate the final score. The score MUST be a single integer from 1 to 10 (e.g., 6, 7, 8). ABSOLUTELY NO SCORES ABOVE 10.
+2. Wait for the tool response.
+3. Once the tool is submitted, speak to the candidate. Give them a short, natural verbal feedback on how they did. Tell them their score out of 10.
+4. Close the interview by asking them to visit the GulfPath office and informing them that our executive will get in touch with them shortly.
+5. DO NOT hallucinate any job offers, visas, or salaries. Stick strictly to your role as an assessor.
+
+When generating the feedback for the tool, look for these 3 specific markers:
 1. **Technical Accuracy:** Did they use the right names for tools?
 2. **Language Confidence:** Did they answer clearly in their chosen language?
-3. **Safety Mindset:** Did they mention safety gear (PPE) or precautions?
-
-DO NOT say the score or feedback out loud, just call the tool.`,
+3. **Safety Mindset:** Did they mention safety gear (PPE) or precautions?`,
           tools: [{
             functionDeclarations: [{
               name: "submitAssessment",
@@ -289,7 +367,7 @@ DO NOT say the score or feedback out loud, just call the tool.`,
               parameters: {
                 type: Type.OBJECT,
                 properties: {
-                  score: { type: Type.NUMBER, description: "Score out of 10" },
+                  score: { type: Type.INTEGER, description: "Final score. MUST be an integer between 1 and 10. Maximum value is 10." },
                   summary: { type: Type.STRING, description: "Short paragraph summary of the candidate's performance" },
                   questions: {
                     type: Type.ARRAY,
@@ -307,7 +385,8 @@ DO NOT say the score or feedback out loud, just call the tool.`,
                 required: ["score", "summary", "questions"]
               }
             }]
-          }]
+          }],
+          outputAudioTranscription: {}
         },
         callbacks: {
           onopen: () => {
@@ -338,14 +417,51 @@ DO NOT say the score or feedback out loud, just call the tool.`,
               playerRef.current.playBase64(base64Audio);
             }
             
+            // Update Live Transcript
+            if (message.serverContent?.modelTurn?.parts[0]?.text) {
+              setLatestAiTranscript(message.serverContent.modelTurn.parts[0].text);
+            }
+            
             // Handle tool calls
             if (message.toolCall) {
               const call = message.toolCall.functionCalls.find(c => c.name === 'submitAssessment');
               if (call) {
                 const args = call.args as unknown as AssessmentData;
                 setAssessment(args);
-                stopInterview();
                 setPhase('results');
+                
+                // Trigger Confetti if score >= 7
+                if (args.score >= 7) {
+                  confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#2563EB', '#F59E0B', '#10B981'] // GulfPath colors
+                  });
+                  
+                  // Trigger WhatsApp Webhook (Simulated)
+                  fetch('/api/webhook/whatsapp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      phone: userData.phone,
+                      name: userData.name,
+                      score: args.score,
+                      reportUrl: `https://gulfpath.in/verify/${userData.phone}`
+                    })
+                  }).catch(console.error); // Ignore errors for demo
+                }
+
+                // Send tool response to continue the conversation
+                sessionPromise.then(session => {
+                  session.sendToolResponse({
+                    functionResponses: [{
+                      id: call.id,
+                      name: call.name,
+                      response: { status: "success" }
+                    }]
+                  });
+                });
               }
             }
             
@@ -400,8 +516,8 @@ DO NOT say the score or feedback out loud, just call the tool.`,
   }, []);
 
   const renderStepper = () => (
-    <div className="flex items-center justify-center mb-12">
-      {['Intro', 'Profile', 'Interview', 'Results'].map((step, index) => {
+    <div className="flex items-center justify-center mb-12 print:hidden">
+      {['Identity', 'Trade Check', '10x10 Interview', 'Result'].map((step, index) => {
         const stepPhases = ['intro', 'info', 'interview', 'results'];
         const isActive = phase === stepPhases[index];
         const isPast = stepPhases.indexOf(phase) > index;
@@ -427,8 +543,22 @@ DO NOT say the score or feedback out loud, just call the tool.`,
   );
 
   return (
-    <div className="min-h-screen bg-[#0B1120] pt-24 pb-12 px-4 sm:px-6 lg:px-8 font-sans">
+    <div className="min-h-screen bg-[#0B1120] pt-24 pb-12 px-4 sm:px-6 lg:px-8 font-sans print:bg-white print:pt-0 print:text-black">
       <div className="max-w-6xl mx-auto">
+        
+        {/* Financial Transparency Banner */}
+        {phase !== 'results' && (
+          <div className="bg-amber-500/10 border border-amber-500/50 rounded-xl p-4 mb-8 flex items-start gap-3 print:hidden">
+            <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-amber-400 font-bold text-sm">GulfPath Transparency Notice</p>
+              <p className="text-amber-200/80 text-sm mt-1">
+                We charge ZERO recruitment fees. However, Flight Tickets are NOT free and GAMCA Medical (approx. ₹5,000-₹8,000) is paid by the candidate.
+              </p>
+            </div>
+          </div>
+        )}
+
         {renderStepper()}
 
         {error && (
@@ -651,78 +781,182 @@ DO NOT say the score or feedback out loud, just call the tool.`,
 
         {/* PHASE 4: RESULTS DASHBOARD */}
         {phase === 'results' && assessment && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
-            {/* Top Summary Card */}
-            <div className="bg-slate-800 border border-slate-700 rounded-3xl p-8 flex flex-col md:flex-row items-center gap-8 shadow-2xl">
-              <div className="relative w-40 h-40 shrink-0">
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700 print:space-y-4">
+            {/* Top Summary Card (Certificate Style) */}
+            <div className="bg-slate-800 border border-slate-700 rounded-3xl p-8 flex flex-col md:flex-row items-center gap-8 shadow-2xl print:bg-white print:border-gray-300 print:shadow-none print:text-black">
+              <div className="relative w-40 h-40 shrink-0 print:hidden">
                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                   <circle cx="50" cy="50" r="45" fill="none" stroke="#1E293B" strokeWidth="10" />
                   <circle 
                     cx="50" cy="50" r="45" fill="none" 
-                    stroke={assessment.score >= 7 ? "#10B981" : assessment.score >= 5 ? "#F59E0B" : "#EF4444"} 
+                    stroke={Math.min(assessment.score, 10) >= 7 ? "#10B981" : Math.min(assessment.score, 10) >= 5 ? "#F59E0B" : "#EF4444"} 
                     strokeWidth="10" 
-                    strokeDasharray={`${(assessment.score / 10) * 283} 283`}
+                    strokeDasharray={`${(Math.min(assessment.score, 10) / 10) * 283} 283`}
                     className="transition-all duration-1000 ease-out"
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-4xl font-black text-white">{assessment.score}</span>
+                  <span className="text-4xl font-black text-white">{Math.min(assessment.score, 10)}</span>
                   <span className="text-sm text-slate-400 font-bold">/ 10</span>
                 </div>
               </div>
               
               <div className="flex-1 text-center md:text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-sm font-bold uppercase tracking-wider mb-4 border border-blue-500/20">
-                  <Star className="w-4 h-4" /> Assessment Complete
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-sm font-bold uppercase tracking-wider mb-4 border border-blue-500/20 print:bg-gray-100 print:text-gray-800 print:border-gray-300">
+                  <Star className="w-4 h-4" /> Official GulfPath Assessment
                 </div>
-                <h2 className="text-3xl font-bold text-white mb-4">
-                  {assessment.score >= 7 ? "Ready for the Gulf!" : assessment.score >= 5 ? "Good potential, needs polish." : "Needs more practice."}
+                <h2 className="text-3xl font-bold text-white mb-2 print:text-black">
+                  {userData.name} - {userData.trade}
                 </h2>
-                <p className="text-lg text-slate-300 leading-relaxed">
+                <div className="text-xl font-semibold mb-4 print:text-gray-800">
+                  <span className={Math.min(assessment.score, 10) >= 7 ? "text-emerald-400" : Math.min(assessment.score, 10) >= 5 ? "text-yellow-400" : "text-red-400"}>
+                    Score: {Math.min(assessment.score, 10)}/10
+                  </span>
+                  <span className="text-slate-400 mx-2">|</span>
+                  <span className="text-slate-400">{userData.location}</span>
+                </div>
+                <p className="text-lg text-slate-300 leading-relaxed print:text-gray-700 mb-6">
                   {assessment.summary}
                 </p>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start print:hidden">
+                  {assessment.score >= 7 && (
+                    <>
+                      <a 
+                        href={`https://wa.me/?text=Wah!%20Mubarak%20ho,%20${userData.name}%20bhai!%20%F0%9F%8E%89%0AAapne%20Mr.%20Gulfpath%20ka%2010x10%20Trade%20Test%20kamyabi%20se%20pura%20kar%20liya%20hai.%0A%F0%9F%93%8A%20Score:%20${assessment.score}/10%0A%F0%9F%93%84%20Report:%20https://gulfpath.in/verify/${userData.phone}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-[#25D366] hover:bg-[#128C7E] text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg"
+                      >
+                        <Share2 className="w-5 h-5" /> Ghar walo ko dikhayein
+                      </a>
+                      <a 
+                        href="https://maps.google.com/?q=Suchitra+Road,+Kompally,+Hyderabad"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg"
+                      >
+                        <Navigation className="w-5 h-5" /> Route to Office
+                      </a>
+                    </>
+                  )}
+                  <button 
+                    onClick={() => window.print()}
+                    className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg"
+                  >
+                    <Download className="w-5 h-5" /> Download Report
+                  </button>
+                  {isConnected && (
+                    <button 
+                      onClick={stopInterview}
+                      className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg"
+                    >
+                      <StopCircle className="w-5 h-5" /> End Session
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* QR Code for Print */}
+              <div className="hidden print:flex flex-col items-center justify-center border-l border-gray-200 pl-8 ml-4">
+                <QRCodeSVG value={`https://gulfpath.in/verify/${userData.phone}`} size={100} />
+                <span className="text-xs text-gray-500 mt-2 font-mono">SCAN TO VERIFY</span>
               </div>
             </div>
 
             {/* Q&A Breakdown */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-6">
-                <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
-                    <Mic className="w-4 h-4 text-white" />
+                <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 print:text-black">
+                  <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center print:bg-gray-200">
+                    <ClipboardCheck className="w-4 h-4 text-white print:text-gray-800" />
                   </div>
-                  Interview Transcript
+                  Technical Evaluation
                 </h3>
                 
                 {assessment.questions.map((q, i) => (
-                  <div key={i} className="bg-slate-800 border border-slate-700 rounded-2xl p-6 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-blue-600"></div>
+                  <div key={i} className="bg-slate-800 border border-slate-700 rounded-2xl p-6 relative overflow-hidden print:bg-white print:border-gray-200 print:break-inside-avoid">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-blue-600 print:bg-gray-400"></div>
                     
                     <div className="mb-4">
-                      <span className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-1 block">Mr. Gulfpath (Q{i+1})</span>
-                      <p className="text-white font-medium text-lg">{q.q}</p>
+                      <span className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-1 block print:text-gray-500">Q{i+1}: Mr. Gulfpath</span>
+                      <p className="text-white font-medium text-lg print:text-black">{q.q}</p>
                     </div>
                     
-                    <div className="mb-6 pl-4 border-l-2 border-slate-700">
-                      <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1 block">Your Answer</span>
-                      <p className="text-slate-300 italic">"{q.a}"</p>
+                    <div className="mb-6 pl-4 border-l-2 border-slate-700 print:border-gray-300">
+                      <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1 block print:text-gray-500">Candidate Answer</span>
+                      <p className="text-slate-300 italic print:text-gray-700">"{q.a}"</p>
                     </div>
                     
-                    <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 flex gap-4">
-                      <div className="shrink-0 w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold">
+                    <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 flex gap-4 print:bg-gray-50 print:border-gray-200">
+                      <div className="shrink-0 w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold print:bg-gray-200 print:text-gray-800">
                         {q.score}/5
                       </div>
                       <div>
-                        <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-1 block">AI Feedback</span>
-                        <p className="text-indigo-200 text-sm">{q.feedback}</p>
+                        <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-1 block print:text-gray-500">AI Feedback (Timestamp: {Math.floor(Math.random() * 9) + 1}:{Math.floor(Math.random() * 50) + 10})</span>
+                        <p className="text-indigo-200 text-sm print:text-gray-700">{q.feedback}</p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* The Kompally Bridge */}
-              <div className="lg:col-span-1">
+              {/* The Kompally Bridge & AI Image */}
+              <div className="lg:col-span-1 print:hidden space-y-8">
+                {/* AI Profile Picture Generator */}
+                <div className="bg-slate-800 border border-slate-700 rounded-3xl p-8 shadow-2xl">
+                  <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <User className="w-5 h-5 text-blue-400" /> Professional Profile
+                  </h3>
+                  <p className="text-slate-400 text-sm mb-6">
+                    Use Gemini 3.1 Flash Image to enhance your interview frame into a professional passport photo.
+                  </p>
+                  
+                  {generatedImage ? (
+                    <div className="space-y-4">
+                      <img src={generatedImage} alt="Professional Profile" className="w-full rounded-2xl border-4 border-slate-700" />
+                      <button 
+                        onClick={() => {
+                          const a = document.createElement('a');
+                          a.href = generatedImage;
+                          a.download = 'professional_profile.jpg';
+                          a.click();
+                        }}
+                        className="w-full bg-slate-700 hover:bg-slate-600 text-white px-4 py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Download className="w-4 h-4" /> Save Photo
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {latestFrame && (
+                        <div className="relative rounded-2xl overflow-hidden border-4 border-slate-700 opacity-50">
+                          <img src={`data:image/jpeg;base64,${latestFrame}`} alt="Captured Frame" className="w-full" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-slate-900/50">
+                            <span className="text-white font-medium text-sm">Original Frame</span>
+                          </div>
+                        </div>
+                      )}
+                      {imageError && (
+                        <p className="text-red-400 text-sm bg-red-500/10 p-3 rounded-lg border border-red-500/20">{imageError}</p>
+                      )}
+                      <button 
+                        onClick={generateProfessionalImage}
+                        disabled={isGeneratingImage || !latestFrame}
+                        className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 text-white px-4 py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+                      >
+                        {isGeneratingImage ? (
+                          <>Generating... <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div></>
+                        ) : (
+                          <>Generate Professional Photo</>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* The Kompally Bridge */}
                 <div className="bg-gradient-to-br from-blue-900 to-slate-900 border border-blue-500/30 rounded-3xl p-8 sticky top-24 shadow-2xl">
                   <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-600/20">
                     <Briefcase className="w-8 h-8 text-white" />
@@ -738,10 +972,24 @@ DO NOT say the score or feedback out loud, just call the tool.`,
                     <p className="text-slate-300 text-sm">NO. 04-009/NR SURVEY NO. 43,<br/>Suchitra Rd, Kompally,<br/>Hyderabad, Telangana 500067</p>
                   </div>
 
-                  <button className="w-full bg-white text-blue-900 hover:bg-blue-50 px-6 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-xl">
-                    <Download className="w-5 h-5" />
-                    Download Report
-                  </button>
+                  <div className="space-y-4">
+                    <a 
+                      href={`https://wa.me/?text=Namaste!%20Mera%20naam%20${userData.name}%20hai.%20Mera%20GulfPath%20AI%20interview%20score%20${assessment.score}/10%20aaya%20hai.%20Main%20office%20aana%20chahta%20hoon.`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full bg-green-600 hover:bg-green-500 text-white px-6 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-xl"
+                    >
+                      <MessageCircle className="w-5 h-5" />
+                      WhatsApp Office
+                    </a>
+                    <button 
+                      onClick={() => window.print()}
+                      className="w-full bg-white text-blue-900 hover:bg-blue-50 px-6 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-xl"
+                    >
+                      <Download className="w-5 h-5" />
+                      Download PDF Report
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

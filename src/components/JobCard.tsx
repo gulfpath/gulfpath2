@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -14,7 +14,8 @@ import {
   Clock,
   Video,
   Bookmark,
-  Zap
+  Zap,
+  X
 } from "lucide-react";
 
 interface JobCardProps {
@@ -61,6 +62,66 @@ export default function JobCard({
 }: JobCardProps) {
   const { t } = useTranslation();
   const [isSaved, setIsSaved] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [highlightedWordIndex, setHighlightedWordIndex] = useState<number | null>(null);
+  const [audioScript, setAudioScript] = useState("");
+  const [words, setWords] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Generate the script based on job details
+    let script = "";
+    if (title.toLowerCase().includes("electrician") && location.toLowerCase().includes("dubai")) {
+      script = `Namaste! Main Sathi hoon. Aapke liye Dubai se ek bahut badhiya kaam aaya hai. Kaam hai Industrial Electrician ka. Company aapko har mahine 1,800 Dirham salary degi, jo India ke hisab se lagbhag 40,000 rupaye bante hain. Iske saath aapko rehne ki jagah, aane-jane ka kharcha, aur medical insurance bilkul FREE milega. Yaad rakhein, GulfPath par koi agent-fee nahi hai. Lekin flight ticket aur GAMCA medical ka kharcha aapko khud dena hoga. Is kaam ke liye aapko humare AI expert, Mr. Gulfpath, ka 10x10 Trade Test pass karna hoga taaki Dubai ki company aapka hunar dekh sake. Agar aap taiyar hain, toh neeche Apply button dabaiye aur phir mere saath apna Mock Interview shuru kijiye. Kuch bhi puchna ho, toh main yahin hoon!`;
+    } else {
+      script = `Namaste! Main Sathi hoon. Aapke liye ${location} se ek bahut badhiya kaam aaya hai. Kaam hai ${title} ka. Company aapko ${salary} salary degi. Iske saath aapko rehne ki jagah aur medical bilkul FREE milega. Yaad rakhein, GulfPath par koi agent-fee nahi hai. Is kaam ke liye aapko humare AI expert ka 10x10 Trade Test pass karna hoga. Agar aap taiyar hain, toh Apply button dabaiye!`;
+    }
+    setAudioScript(script);
+    setWords(script.split(" "));
+  }, [title, location, salary]);
+
+  const handleListen = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if ('speechSynthesis' in window) {
+      if (isPlaying) {
+        window.speechSynthesis.cancel();
+        setIsPlaying(false);
+        setHighlightedWordIndex(null);
+        return;
+      }
+      
+      window.speechSynthesis.cancel(); // stop any current speech
+      const utterance = new SpeechSynthesisUtterance(audioScript);
+      utterance.rate = 0.9; // Slower tempo for better clarity
+      
+      utterance.onboundary = (event) => {
+        if (event.name === 'word') {
+          // Calculate which word we are on based on charIndex
+          const textUntilBoundary = audioScript.substring(0, event.charIndex);
+          const wordIndex = textUntilBoundary.split(" ").length - 1;
+          setHighlightedWordIndex(wordIndex);
+        }
+      };
+
+      utterance.onend = () => {
+        setIsPlaying(false);
+        setHighlightedWordIndex(null);
+      };
+      utterance.onerror = () => {
+        setIsPlaying(false);
+        setHighlightedWordIndex(null);
+      };
+      
+      // Try to find a Hindi voice
+      const voices = window.speechSynthesis.getVoices();
+      const hindiVoice = voices.find(v => v.lang.includes('hi-IN') || v.lang.includes('hi'));
+      if (hindiVoice) utterance.voice = hindiVoice;
+      
+      window.speechSynthesis.speak(utterance);
+      setIsPlaying(true);
+    } else {
+      alert("Text-to-speech is not supported in your browser.");
+    }
+  };
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 p-6 flex flex-col h-full relative overflow-hidden">
@@ -78,16 +139,25 @@ export default function JobCard({
             {isEmployerVerified && <CheckCircle className="h-4 w-4 text-blue-500" />}
           </p>
         </div>
-        <button 
-          onClick={(e) => {
-            e.preventDefault();
-            setIsSaved(!isSaved);
-          }}
-          className={`p-2 rounded-full transition-colors ${isSaved ? 'bg-blue-50 text-blue-600' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
-          aria-label={isSaved ? "Unsave job" : "Save job"}
-        >
-          <Bookmark className="h-6 w-6" fill={isSaved ? "currentColor" : "none"} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={handleListen}
+            className={`p-2 rounded-full transition-colors ${isPlaying ? 'bg-indigo-100 text-indigo-600 animate-pulse' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'}`}
+            title="Listen to job details"
+          >
+            <Volume2 className="h-5 w-5" />
+          </button>
+          <button 
+            onClick={(e) => {
+              e.preventDefault();
+              setIsSaved(!isSaved);
+            }}
+            className={`p-2 rounded-full transition-colors ${isSaved ? 'bg-blue-50 text-blue-600' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
+            aria-label={isSaved ? "Unsave job" : "Save job"}
+          >
+            <Bookmark className="h-5 w-5" fill={isSaved ? "currentColor" : "none"} />
+          </button>
+        </div>
       </div>
 
       <div className="mb-4">
@@ -156,9 +226,12 @@ export default function JobCard({
             <span className="sr-only md:not-sr-only md:text-sm">Quick Chat</span>
           </a>
         ) : (
-          <button className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 rounded-xl font-medium transition-colors flex-1">
-            <Volume2 className="h-5 w-5" />
-            <span className="sr-only md:not-sr-only md:text-sm">{t('Listen')}</span>
+          <button 
+            onClick={handleListen}
+            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-colors flex-1 ${isPlaying ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
+          >
+            <Volume2 className={`h-5 w-5 ${isPlaying ? 'animate-pulse' : ''}`} />
+            <span className="sr-only md:not-sr-only md:text-sm">{isPlaying ? 'Stop Listening' : t('Listen')}</span>
           </button>
         )}
         {isQuickApply ? (
@@ -172,6 +245,39 @@ export default function JobCard({
           </Link>
         )}
       </div>
+
+      {/* Karaoke Text Overlay */}
+      {isPlaying && (
+        <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-20 p-6 flex flex-col">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-2 text-indigo-600 font-bold">
+              <Volume2 className="h-5 w-5 animate-pulse" />
+              Sathi is speaking...
+            </div>
+            <button onClick={handleListen} className="text-gray-500 hover:text-gray-700 bg-gray-100 p-2 rounded-full">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            <p className="text-lg leading-relaxed font-medium text-gray-400">
+              {words.map((word, index) => (
+                <span 
+                  key={index} 
+                  className={`transition-colors duration-200 ${
+                    index === highlightedWordIndex 
+                      ? 'text-indigo-600 bg-indigo-50 px-1 rounded font-bold' 
+                      : index < (highlightedWordIndex || 0) 
+                        ? 'text-gray-800' 
+                        : ''
+                  }`}
+                >
+                  {word}{' '}
+                </span>
+              ))}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ShieldCheck,
@@ -9,13 +9,68 @@ import {
   ArrowRight,
   Volume2,
   Mic,
+  Briefcase,
+  MapPin,
+  FileBadge,
+  Video,
+  Building2,
+  Bot
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import JobCard from "../components/JobCard";
 
 export default function Home() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  const jobSuggestions = [
+    { name: "Driver", category: "Transport", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Heavy Vehicle Driver", category: "Transport", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Light Vehicle Driver", category: "Transport", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Plumber", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Pipefitter", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Electrician", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Residential Electrician", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Industrial Electrician", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Mason", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Carpenter", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Welder", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Painter", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Security Guard", category: "Services", icon: <ShieldCheck className="w-4 h-4 text-gray-400" /> },
+    { name: "HVAC Technician", category: "Maintenance", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Crane Operator", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Scaffolder", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Steel Fixer", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Helper", category: "General", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Cleaner", category: "Services", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Cook", category: "Hospitality", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+  ];
+
+  const filteredSuggestions = jobSuggestions.filter(job => 
+    job.name.toLowerCase().includes(searchQuery.toLowerCase())
+  ).slice(0, 6);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      navigate(`/jobs?search=${encodeURIComponent(query)}`);
+    } else {
+      navigate('/jobs');
+    }
+  };
 
   const trendingJobs = [
     {
@@ -60,6 +115,90 @@ export default function Home() {
       housingProvided: true,
       postedDaysAgo: 3,
     },
+    {
+      id: "4",
+      title: "Plumber / Pipefitter",
+      company: "ASGC Construction",
+      location: "Abu Dhabi, UAE",
+      salary: "2,200 AED / month",
+      experience: "2+ Years",
+      isFree: true,
+      benefits: ["Accommodation", "Medical", "Overtime"],
+      whatsappNumber: "971501234568",
+      isEcrAccepted: true,
+      housingProvided: true,
+      postedDaysAgo: 2,
+    },
+    {
+      id: "5",
+      title: "Security Guard",
+      company: "Farnek Services",
+      location: "Dubai, UAE",
+      salary: "2,000 AED / month",
+      experience: "1+ Years",
+      isFree: true,
+      benefits: ["Accommodation", "Transportation", "Uniform"],
+      whatsappNumber: "971501234569",
+      isEcrAccepted: true,
+      housingProvided: true,
+      postedDaysAgo: 1,
+    },
+    {
+      id: "6",
+      title: "Mason (Block & Plaster)",
+      company: "Alfanar",
+      location: "Jeddah, KSA",
+      salary: "2,400 SAR / month",
+      experience: "3+ Years",
+      isFree: true,
+      benefits: ["Free Food", "Accommodation", "Medical"],
+      whatsappNumber: "966501234568",
+      isEcrAccepted: true,
+      housingProvided: true,
+      postedDaysAgo: 4,
+    },
+    {
+      id: "7",
+      title: "Welder (6G)",
+      company: "NBTC Group",
+      location: "Ahmadi, Kuwait",
+      salary: "250 KWD / month",
+      experience: "4+ Years",
+      isFree: true,
+      benefits: ["Accommodation", "Transportation", "Medical"],
+      whatsappNumber: "96550123456",
+      isEcrAccepted: false,
+      housingProvided: true,
+      postedDaysAgo: 0,
+    },
+    {
+      id: "8",
+      title: "General Helper",
+      company: "Imdaad",
+      location: "Dubai, UAE",
+      salary: "1,200 AED / month",
+      experience: "Fresher Accepted",
+      isFree: true,
+      benefits: ["Free Food", "Accommodation", "Transportation"],
+      whatsappNumber: "971501234570",
+      isEcrAccepted: true,
+      housingProvided: true,
+      postedDaysAgo: 2,
+    },
+    {
+      id: "9",
+      title: "Carpenter (Shuttering)",
+      company: "DP World",
+      location: "Dubai, UAE",
+      salary: "1,800 AED / month",
+      experience: "2+ Years",
+      isFree: true,
+      benefits: ["Accommodation", "Medical", "Overtime"],
+      whatsappNumber: "971501234571",
+      isEcrAccepted: true,
+      housingProvided: true,
+      postedDaysAgo: 5,
+    }
   ];
 
   const partnerLogos = [
@@ -81,87 +220,239 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50 selection:bg-blue-500 selection:text-white">
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-blue-900 to-blue-800 text-white py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 bg-blue-800/50 rounded-full px-4 py-2 border border-blue-700/50 backdrop-blur-sm">
-                <ShieldCheck className="h-5 w-5 text-green-400" />
-                <span className="text-sm font-medium text-blue-100">
+      <section className="relative min-h-[90vh] flex items-center pt-20 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden bg-slate-950">
+        {/* Abstract Background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-600/20 blur-[120px] mix-blend-screen animate-pulse-slow"></div>
+          <div className="absolute top-[20%] -right-[10%] w-[40%] h-[60%] rounded-full bg-indigo-500/20 blur-[120px] mix-blend-screen animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute -bottom-[20%] left-[20%] w-[60%] h-[50%] rounded-full bg-blue-800/20 blur-[120px] mix-blend-screen animate-pulse-slow" style={{ animationDelay: '4s' }}></div>
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-20"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto relative z-10 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            <div className="lg:col-span-7 space-y-10">
+              <div className="inline-flex items-center gap-2 bg-white/5 rounded-full px-4 py-2 border border-white/10 backdrop-blur-md">
+                <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                <span className="text-xs font-semibold text-slate-300 tracking-wide uppercase">
                   MEA Registered & Verified Platform
                 </span>
               </div>
-              <h1 className="text-5xl md:text-6xl font-bold leading-tight tracking-tight">
-                {t("Find Verified Visa-Free Jobs in GCC")}
+              
+              <h1 className="text-5xl md:text-7xl font-display font-bold leading-[1.1] tracking-tight text-white">
+                {t("Find Verified")} <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
+                  {t("Visa-Free Jobs")}
+                </span> <br />
+                {t("in GCC")}
               </h1>
-              <p className="text-xl text-blue-200 font-medium max-w-lg">
-                {t("No Recruitment Fees. 100% Employer Sponsored.")}
+              
+              <p className="text-xl text-slate-400 font-light max-w-xl leading-relaxed">
+                {t("No Recruitment Fees. 100% Employer Sponsored. Direct access to top companies in UAE, Saudi Arabia, Qatar, and Kuwait.")}
               </p>
 
-              <div className="bg-white rounded-2xl p-2 flex items-center shadow-xl max-w-xl">
-                <div className="flex-1 flex items-center px-4 border-r border-gray-200">
-                  <Search className="h-5 w-5 text-gray-400 mr-3" />
-                  <input
-                    type="text"
-                    placeholder="e.g., Plumber, Electrician, Driver..."
-                    className="w-full bg-transparent border-none focus:ring-0 text-gray-900 placeholder-gray-500 py-3 outline-none"
-                  />
+              <div className="relative max-w-2xl" ref={searchRef}>
+                <div className="glass-dark rounded-2xl p-2 flex items-center shadow-2xl relative z-20 transition-all focus-within:ring-2 focus-within:ring-blue-500/50">
+                  <div className="flex-1 flex items-center px-4 border-r border-white/10">
+                    <Search className="h-5 w-5 text-slate-400 mr-3" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setShowSuggestions(true);
+                      }}
+                      onFocus={() => setShowSuggestions(true)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          setShowSuggestions(false);
+                          handleSearch(searchQuery);
+                        }
+                      }}
+                      placeholder="e.g., Plumber, Electrician, Driver..."
+                      className="w-full bg-transparent border-none focus:ring-0 text-white placeholder-slate-500 py-4 outline-none text-lg font-light"
+                    />
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setShowSuggestions(false);
+                      handleSearch(searchQuery);
+                    }}
+                    className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-xl font-semibold transition-all shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] ml-2 flex items-center gap-2"
+                  >
+                    {t("Search")} <ArrowRight className="w-4 h-4" />
+                  </button>
                 </div>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors ml-2">
-                  {t("Search Jobs")}
-                </button>
+
+                {/* Search Suggestions Dropdown */}
+                {showSuggestions && searchQuery.trim().length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-30">
+                    {filteredSuggestions.length > 0 ? (
+                      <ul className="py-2">
+                        {filteredSuggestions.map((suggestion, index) => (
+                          <li key={index}>
+                            <button
+                              onClick={() => {
+                                setSearchQuery(suggestion.name);
+                                setShowSuggestions(false);
+                                handleSearch(suggestion.name);
+                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-blue-50 flex items-center justify-between group transition-colors"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 bg-gray-50 rounded-lg group-hover:bg-white transition-colors">
+                                  {suggestion.icon}
+                                </div>
+                                <span className="font-medium text-gray-700 group-hover:text-blue-700">
+                                  {suggestion.name.split(new RegExp(`(${searchQuery})`, 'gi')).map((part, i) => 
+                                    part.toLowerCase() === searchQuery.toLowerCase() ? (
+                                      <span key={i} className="text-blue-600 font-bold">{part}</span>
+                                    ) : (
+                                      <span key={i}>{part}</span>
+                                    )
+                                  )}
+                                </span>
+                              </div>
+                              <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-md group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                                {suggestion.category}
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="px-4 py-4 text-gray-500 text-sm flex items-center gap-2">
+                        <Search className="w-4 h-4" />
+                        No exact matches found. Press Enter to search all jobs for "{searchQuery}".
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center gap-6 text-sm text-blue-200 mt-6">
-                <div className="bg-blue-800/50 px-4 py-2 rounded-xl flex items-center gap-3 border border-blue-700/50">
-                  <div className="bg-blue-500 p-2 rounded-full animate-pulse">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+              <div className="flex flex-wrap items-center gap-4 text-sm text-slate-300 mt-8">
+                <button 
+                  onClick={() => {
+                    const event = new CustomEvent('open-voice-assistant');
+                    window.dispatchEvent(event);
+                  }}
+                  className="glass-dark px-5 py-3 rounded-xl flex items-center gap-3 hover:bg-white/10 transition-all text-left border border-white/10 group"
+                >
+                  <div className="bg-blue-500/20 p-2 rounded-full group-hover:bg-blue-500/30 transition-colors relative">
+                    <div className="absolute inset-0 bg-blue-500 rounded-full animate-ping opacity-20"></div>
+                    <Mic className="h-5 w-5 text-blue-400" />
                   </div>
                   <div>
-                    <p className="text-white font-bold">Try Voice Search</p>
-                    <p className="text-xs text-blue-300">Speak to Sathi AI</p>
+                    <p className="text-white font-semibold">Talk to Sathi</p>
+                    <p className="text-xs text-slate-400">Fast, voice-based onboarding</p>
                   </div>
-                </div>
-              </div>
+                </button>
 
-              <div className="flex items-center gap-6 text-sm text-blue-200 mt-8">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-400" />
-                  <span>Zero Fees</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-400" />
-                  <span>Direct Company Visa</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-400" />
-                  <span>eMigrate Support</span>
+                <div className="flex flex-wrap items-center gap-4 ml-2">
+                  <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+                    <CheckCircle className="h-4 w-4 text-emerald-400" />
+                    <span className="text-slate-300">Zero Fees</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+                    <CheckCircle className="h-4 w-4 text-emerald-400" />
+                    <span className="text-slate-300">Direct Visa</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
+                    <CheckCircle className="h-4 w-4 text-emerald-400" />
+                    <span className="text-slate-300">eMigrate Support</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="hidden lg:block relative">
-              <div className="absolute inset-0 bg-blue-500 rounded-full blur-3xl opacity-20"></div>
-              <img
-                src="https://picsum.photos/seed/construction/800/600"
-                alt="Construction workers"
-                className="rounded-3xl shadow-2xl relative z-10 border-4 border-white/10 object-cover aspect-[4/3]"
-                referrerPolicy="no-referrer"
-              />
+            <div className="hidden lg:block lg:col-span-5 relative">
+              <div className="relative w-full aspect-[4/5] rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl animate-float">
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent z-10"></div>
+                <img
+                  src="https://picsum.photos/seed/dubai-construction/800/1000"
+                  alt="Construction workers in Dubai"
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+                
+                {/* Sathi AI Interaction Overlay */}
+                <div className="absolute inset-0 z-20 flex flex-col justify-end p-6 pb-8">
+                  {/* Sathi Message */}
+                  <div className="self-start max-w-[85%] mb-4 animate-fade-in-up">
+                    <div className="flex items-end gap-2">
+                      <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shadow-lg border border-blue-400/30 shrink-0">
+                        <Bot className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="glass-dark px-4 py-3 rounded-2xl rounded-bl-none border border-white/10 shadow-xl">
+                        <p className="text-sm text-white font-medium">Namaste bhai! Aapka trade kya hai?</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Worker Voice Input */}
+                  <div className="self-end max-w-[85%] mb-6 animate-fade-in-up" style={{ animationDelay: '1s' }}>
+                    <div className="flex items-end gap-2 flex-row-reverse">
+                      <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg border border-emerald-400/30 shrink-0">
+                        <Mic className="w-4 h-4 text-white" />
+                      </div>
+                      <div className="bg-emerald-500/20 backdrop-blur-md px-4 py-3 rounded-2xl rounded-br-none border border-emerald-500/30 shadow-xl">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="flex gap-0.5">
+                            <span className="w-1 h-3 bg-emerald-400 rounded-full animate-pulse"></span>
+                            <span className="w-1 h-4 bg-emerald-400 rounded-full animate-pulse" style={{ animationDelay: '0.1s' }}></span>
+                            <span className="w-1 h-2 bg-emerald-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></span>
+                            <span className="w-1 h-5 bg-emerald-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></span>
+                          </span>
+                          <span className="text-[10px] text-emerald-200 uppercase tracking-wider font-semibold">Speaking Hindi</span>
+                        </div>
+                        <p className="text-sm text-white font-medium">Main 5 saal se Dubai mein electrician tha...</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dynamic Profile Generation Card */}
+                  <div className="glass-dark p-4 rounded-2xl border border-blue-500/30 shadow-[0_0_30px_rgba(37,99,235,0.2)] animate-fade-in-up relative overflow-hidden" style={{ animationDelay: '2s' }}>
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-emerald-500"></div>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="bg-blue-500/20 p-1.5 rounded-lg">
+                          <FileText className="w-4 h-4 text-blue-400" />
+                        </div>
+                        <span className="text-xs font-semibold text-blue-300 uppercase tracking-wider">AI Profile Generated</span>
+                      </div>
+                      <CheckCircle className="w-4 h-4 text-emerald-400" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                        <span className="text-xs text-slate-400">Trade</span>
+                        <span className="text-sm text-white font-semibold">Residential Electrician</span>
+                      </div>
+                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                        <span className="text-xs text-slate-400">Experience</span>
+                        <span className="text-sm text-white font-semibold">5 Years</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-400">Gulf Return</span>
+                        <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-md font-medium border border-emerald-500/20">Yes (Dubai)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               {/* Floating Trust Badge */}
-              <div className="absolute -bottom-6 -left-6 bg-white p-4 rounded-2xl shadow-xl z-20 flex items-center gap-4">
-                <div className="bg-green-100 p-3 rounded-full">
-                  <ShieldCheck className="h-8 w-8 text-green-600" />
+              <div className="absolute top-12 -left-12 glass-dark p-4 rounded-2xl shadow-2xl z-20 flex items-center gap-4 border border-white/10 animate-float" style={{ animationDelay: '1s' }}>
+                <div className="bg-blue-500/20 p-3 rounded-full">
+                  <Bot className="h-6 w-6 text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 font-medium">
-                    Verified by
+                  <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">
+                    Powered by
                   </p>
-                  <p className="text-gray-900 font-bold">
-                    GulfPath Trust & Safety
+                  <p className="text-white font-bold">
+                    Sathi AI
                   </p>
                 </div>
               </div>
@@ -190,96 +481,289 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How it Works (Accessibility Focus) */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+      {/* Reputation Anchors */}
+      <section className="bg-white py-12 border-b border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="bg-emerald-50/50 rounded-3xl p-8 flex items-start gap-6 border border-emerald-100/50 hover:bg-emerald-50 transition-colors">
+              <div className="bg-emerald-100 p-4 rounded-2xl shrink-0">
+                <ShieldCheck className="h-8 w-8 text-emerald-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-display font-bold text-slate-900 mb-2">Zero-Fee Policy</h3>
+                <p className="text-slate-600 leading-relaxed">Ethical recruitment at its core. We charge zero agency fees. We provide total transparency on flight and medical costs so you can plan your future safely.</p>
+              </div>
+            </div>
+            <div className="bg-blue-50/50 rounded-3xl p-8 flex items-start gap-6 border border-blue-100/50 hover:bg-blue-50 transition-colors">
+              <div className="bg-blue-100 p-4 rounded-2xl shrink-0">
+                <MapPin className="h-8 w-8 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-display font-bold text-slate-900 mb-2">Kompally HQ Verify</h3>
+                <p className="text-slate-600 leading-relaxed">We are real. Visit our physical office at Suchitra Road, Kompally, Hyderabad to verify your AI scores and complete your documentation in person.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* High-Trust Feature Suite */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-50">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Easy, Safe, and Transparent
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-slate-900 mb-6 tracking-tight">
+              More Than a Job Board. <br className="hidden md:block" />
+              <span className="text-blue-600">A Verified Career Path.</span>
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              We designed GulfPath specifically for blue-collar workers. No
-              complicated forms, no hidden fees.
+            <p className="text-slate-500 max-w-2xl mx-auto text-lg font-light">
+              We solve the biggest pain points: Scams, Lack of Skill Proof, and Complex Paperwork.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="text-center space-y-4">
-              <div className="bg-blue-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <PlayCircle className="h-10 w-10 text-blue-600" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* 01 Sathi */}
+            <div 
+              className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+              onClick={() => {
+                const event = new CustomEvent('open-voice-assistant');
+                window.dispatchEvent(event);
+              }}
+            >
+              <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-blue-600 group-hover:scale-110 transition-all duration-300">
+                <Mic className="h-7 w-7 text-blue-600 group-hover:text-white transition-colors" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">
-                Listen to Jobs
-              </h3>
-              <p className="text-gray-600">
-                Don't want to read? Just tap the play button on any job to hear
-                the details in your language.
+              <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Sathi: Voice Assistant</h3>
+              <p className="text-slate-500 text-sm leading-relaxed font-light">
+                "Namaste! Main Sathi hoon." Forget complex forms. Talk to our AI assistant in Hindi, Telugu, or Tamil to build your profile effortlessly using just your voice.
               </p>
             </div>
-            <div className="text-center space-y-4">
-              <div className="bg-green-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FileText className="h-10 w-10 text-green-600" />
+
+            {/* 02 Audio Jobs */}
+            <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+              <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-indigo-600 group-hover:scale-110 transition-all duration-300">
+                <Volume2 className="h-7 w-7 text-indigo-600 group-hover:text-white transition-colors" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">
-                No Resume Needed
-              </h3>
-              <p className="text-gray-600">
-                Apply instantly using our step-by-step form or WhatsApp chatbot.
-                Upload a short video of your skills instead.
+              <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Audio Job Postings</h3>
+              <p className="text-slate-500 text-sm leading-relaxed font-light">
+                Don't want to read? Tap the 'Listen' button on any job. We read out the salary, duties, and benefits in your mother tongue so you never miss a detail.
               </p>
             </div>
-            <div className="text-center space-y-4">
-              <div className="bg-purple-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <ShieldCheck className="h-10 w-10 text-purple-600" />
+
+            {/* 03 10x10 AI Trade Test */}
+            <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative">
+              <div className="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-purple-600 group-hover:scale-110 transition-all duration-300">
+                <Bot className="h-7 w-7 text-purple-600 group-hover:text-white transition-colors" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900">100% Verified</h3>
-              <p className="text-gray-600">
-                Every employer is checked. Every job is verified. We ensure you
-                get the exact salary and benefits promised.
+              <h3 className="text-xl font-display font-bold text-slate-900 mb-4">10x10 AI Trade Test</h3>
+              <p className="text-slate-500 text-sm leading-relaxed font-light">
+                The ultimate mock interview. Take a 10-minute technical stress test with Mr. Gulfpath. Answer 10 real-world trade questions to prove you are ready for the Gulf.
+              </p>
+            </div>
+
+            {/* 04 AI Report Card */}
+            <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+              <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-emerald-600 group-hover:scale-110 transition-all duration-300">
+                <FileBadge className="h-7 w-7 text-emerald-600 group-hover:text-white transition-colors" />
+              </div>
+              <h3 className="text-xl font-display font-bold text-slate-900 mb-4">AI Report Card</h3>
+              <p className="text-slate-500 text-sm leading-relaxed font-light">
+                Get an Internshala-style feedback report after your interview. See your technical score, strengths, and areas to improve. Download it as a verified PDF.
+              </p>
+            </div>
+
+            {/* 05 Kompally HQ Verify */}
+            <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden flex flex-col">
+              <div className="h-40 w-full overflow-hidden">
+                <img src="https://picsum.photos/seed/hyderabad/400/200" alt="Kompally HQ" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" referrerPolicy="no-referrer" />
+              </div>
+              <div className="p-8 flex-1">
+                <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 -mt-14 relative z-10 border-4 border-white group-hover:bg-blue-600 transition-colors duration-300">
+                  <Building2 className="h-6 w-6 text-blue-600 group-hover:text-white transition-colors" />
+                </div>
+                <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Kompally HQ Verify</h3>
+                <p className="text-slate-500 text-sm leading-relaxed font-light">
+                  We are real. Visit our physical office at Suchitra Road, Kompally, Hyderabad to verify your AI scores and complete your documentation in person.
+                </p>
+              </div>
+            </div>
+
+            {/* 06 Resume-Free Video */}
+            <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+              <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-rose-600 group-hover:scale-110 transition-all duration-300">
+                <Video className="h-7 w-7 text-rose-600 group-hover:text-white transition-colors" />
+              </div>
+              <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Resume-Free Video</h3>
+              <p className="text-slate-500 text-sm leading-relaxed font-light">
+                Show, don't just tell. Upload a 30-second video of your hands performing your trade. Let the employer see your skill and confidence before they even call you.
+              </p>
+            </div>
+
+            {/* 07 Zero-Fee Policy */}
+            <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+              <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-emerald-600 group-hover:scale-110 transition-all duration-300">
+                <ShieldCheck className="h-7 w-7 text-emerald-600 group-hover:text-white transition-colors" />
+              </div>
+              <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Zero-Fee Policy</h3>
+              <p className="text-slate-500 text-sm leading-relaxed font-light">
+                Ethical recruitment at its core. We charge zero agency fees. We provide total transparency on flight and medical costs so you can plan your future safely.
+              </p>
+            </div>
+
+            {/* 08 Verified B2B Network */}
+            <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+              <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-amber-600 group-hover:scale-110 transition-all duration-300">
+                <Briefcase className="h-7 w-7 text-amber-600 group-hover:text-white transition-colors" />
+              </div>
+              <h3 className="text-xl font-display font-bold text-slate-900 mb-4">Verified B2B Network</h3>
+              <p className="text-slate-500 text-sm leading-relaxed font-light">
+                Direct access to real companies. We only allow employers with verified business emails and trade licenses. No middle-men. No fake agents. Just real jobs.
               </p>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Sathi AI Profile Builder Section */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white border-t border-slate-100 overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            <div className="lg:w-1/2 relative">
+              <div className="absolute inset-0 bg-blue-50 rounded-[3rem] transform -rotate-3 scale-105 z-0"></div>
+              <div className="relative z-10 bg-white rounded-[3rem] p-8 shadow-xl border border-slate-100">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
+                    <Bot className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">Sathi AI</h3>
+                    <p className="text-sm text-slate-500">Your Personal Career Assistant</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-6">
+                  {/* Step 1 */}
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100">
+                      <span className="text-blue-600 font-bold">1</span>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 mb-1">Speak in Your Language</h4>
+                      <p className="text-sm text-slate-600">Talk to Sathi in Hindi, Telugu, Tamil, or English. Just tell us what you do, like you're talking to a friend.</p>
+                    </div>
+                  </div>
+                  
+                  {/* Step 2 */}
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100">
+                      <span className="text-blue-600 font-bold">2</span>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 mb-1">AI Understands Your Trade</h4>
+                      <p className="text-sm text-slate-600">Sathi automatically translates your words into professional GCC trade titles (e.g., "Wiring ka kaam" becomes "Residential Electrician").</p>
+                    </div>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100">
+                      <span className="text-blue-600 font-bold">3</span>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 mb-1">Instant Professional Profile</h4>
+                      <p className="text-sm text-slate-600">Within seconds, your voice is turned into a verified, professional profile ready to be sent to top employers in Dubai, Saudi, and Qatar.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-10 pt-8 border-t border-slate-100">
+                  <button 
+                    onClick={() => {
+                      const event = new CustomEvent('open-voice-assistant');
+                      window.dispatchEvent(event);
+                    }}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2"
+                  >
+                    <Mic className="w-5 h-5" />
+                    Try Sathi AI Now
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="lg:w-1/2 space-y-8">
+              <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-full border border-blue-100 text-sm font-semibold tracking-wide uppercase">
+                <Bot className="w-4 h-4" />
+                AI Profile Builder
+              </div>
+              <h2 className="text-4xl md:text-5xl font-display font-bold text-slate-900 leading-tight tracking-tight">
+                No Resume? No Problem. <br />
+                <span className="text-blue-600">Let Sathi Build It For You.</span>
+              </h2>
+              <p className="text-xl text-slate-600 font-light leading-relaxed">
+                We know writing a CV is hard. That's why we built Sathi. Just tap the microphone and tell us about your experience. Our AI does the rest, creating a profile that GCC employers trust.
+              </p>
+              
+              <div className="grid grid-cols-2 gap-6 pt-4">
+                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                  <div className="text-3xl font-bold text-blue-600 mb-2">30s</div>
+                  <p className="text-sm text-slate-600 font-medium">Average time to build a complete profile</p>
+                </div>
+                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                  <div className="text-3xl font-bold text-blue-600 mb-2">4+</div>
+                  <p className="text-sm text-slate-600 font-medium">Regional languages supported natively</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Mock Interview Suite */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-900 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-blue-600/20 blur-3xl rounded-full w-96 h-96 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></div>
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-950 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-blue-600/10 blur-[100px] rounded-full w-[800px] h-[800px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="flex flex-col lg:flex-row items-center gap-12">
-            <div className="lg:w-1/2 space-y-6">
-              <div className="inline-flex items-center gap-2 bg-blue-500/20 text-blue-300 px-4 py-2 rounded-full border border-blue-500/30 text-sm font-bold">
-                <span className="relative flex h-3 w-3">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            <div className="lg:w-1/2 space-y-8">
+              <div className="inline-flex items-center gap-2 bg-blue-500/10 text-blue-400 px-4 py-2 rounded-full border border-blue-500/20 text-sm font-semibold tracking-wide uppercase">
+                <span className="relative flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
                 </span>
                 New Feature
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold leading-tight">
+              <h2 className="text-4xl md:text-6xl font-display font-bold leading-[1.1] tracking-tight">
                 Mock Interview Suite <br className="hidden md:block" />
-                <span className="text-blue-400">(Mr. Gulfpath)</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
+                  (Mr. Gulfpath)
+                </span>
               </h2>
-              <p className="text-xl text-slate-300">
+              <p className="text-xl text-slate-400 font-light leading-relaxed">
                 Live Voice & Video Agent: A real-time, immersive interview simulation with "Mr. Gulfpath," a specialized GCC recruitment persona.
               </p>
-              <ul className="space-y-4 mt-6">
-                <li className="flex items-center gap-3 text-slate-200">
-                  <CheckCircle className="h-6 w-6 text-green-400 shrink-0" />
-                  <span>Practice technical questions for your specific trade.</span>
+              <ul className="space-y-5 mt-8">
+                <li className="flex items-start gap-4 text-slate-300">
+                  <div className="bg-emerald-500/20 p-1.5 rounded-full mt-1">
+                    <CheckCircle className="h-5 w-5 text-emerald-400 shrink-0" />
+                  </div>
+                  <span className="text-lg font-light">Practice technical questions for your specific trade.</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-200">
-                  <CheckCircle className="h-6 w-6 text-green-400 shrink-0" />
-                  <span>Get instant feedback on your answers and confidence.</span>
+                <li className="flex items-start gap-4 text-slate-300">
+                  <div className="bg-emerald-500/20 p-1.5 rounded-full mt-1">
+                    <CheckCircle className="h-5 w-5 text-emerald-400 shrink-0" />
+                  </div>
+                  <span className="text-lg font-light">Get instant feedback on your answers and confidence.</span>
                 </li>
-                <li className="flex items-center gap-3 text-slate-200">
-                  <CheckCircle className="h-6 w-6 text-green-400 shrink-0" />
-                  <span>Overcome interview fear before facing real employers.</span>
+                <li className="flex items-start gap-4 text-slate-300">
+                  <div className="bg-emerald-500/20 p-1.5 rounded-full mt-1">
+                    <CheckCircle className="h-5 w-5 text-emerald-400 shrink-0" />
+                  </div>
+                  <span className="text-lg font-light">Overcome interview fear before facing real employers.</span>
                 </li>
               </ul>
-              <div className="pt-6">
+              <div className="pt-8">
                 <Link 
                   to="/mock-interview"
-                  className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-xl font-bold text-lg transition-colors inline-flex items-center gap-3 shadow-[0_0_20px_rgba(37,99,235,0.4)]"
+                  className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all inline-flex items-center gap-3 shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] hover:-translate-y-1"
                 >
                   <PlayCircle className="h-6 w-6" />
                   Start Mock Interview
@@ -287,41 +771,60 @@ export default function Home() {
               </div>
             </div>
             <div className="lg:w-1/2 w-full">
-              <div className="bg-slate-800 rounded-3xl p-6 border border-slate-700 shadow-2xl relative">
-                <div className="aspect-video bg-slate-900 rounded-2xl overflow-hidden relative border border-slate-700">
-                  <img 
-                    src="https://picsum.photos/seed/interview/800/450" 
-                    alt="Mock Interview Interface" 
-                    className="w-full h-full object-cover opacity-50"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="w-24 h-24 bg-blue-600/20 rounded-full flex items-center justify-center mb-4 relative">
+              <div className="glass-dark rounded-[2.5rem] p-6 border border-white/10 shadow-2xl relative">
+                <div className="aspect-video bg-slate-900 rounded-[2rem] overflow-hidden relative border border-white/5 shadow-inner">
+                  {/* Abstract AI/Tech Background */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950"></div>
+                  <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(96, 165, 250, 0.4) 1px, transparent 0)', backgroundSize: '32px 32px' }}></div>
+                  
+                  {/* Animated glowing orbs for "AI thinking" effect */}
+                  <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/20 rounded-full mix-blend-screen filter blur-[80px] animate-pulse-slow"></div>
+                  <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-indigo-500/20 rounded-full mix-blend-screen filter blur-[80px] animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+
+                  <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+                    <div className="w-32 h-32 bg-slate-900 rounded-full flex items-center justify-center mb-8 relative shadow-2xl border border-white/10">
+                      {/* Outer animated rings */}
                       <div className="absolute inset-0 border-2 border-blue-500 rounded-full animate-ping opacity-20"></div>
-                      <img 
-                        src="https://picsum.photos/seed/mrgulfpath/150/150" 
-                        alt="Mr. Gulfpath Avatar" 
-                        className="w-20 h-20 rounded-full object-cover border-2 border-blue-500"
-                        referrerPolicy="no-referrer"
-                      />
+                      <div className="absolute -inset-4 border border-blue-400/20 rounded-full animate-spin-slow"></div>
+                      <div className="absolute -inset-8 border border-indigo-400/10 rounded-full animate-reverse-spin"></div>
+                      
+                      {/* AI Avatar Icon */}
+                      <div className="w-28 h-28 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-full flex items-center justify-center shadow-inner">
+                        <Bot className="h-14 w-14 text-white" />
+                      </div>
                     </div>
-                    <div className="bg-slate-800/80 backdrop-blur-sm px-6 py-3 rounded-full border border-slate-600">
-                      <p className="text-white font-medium flex items-center gap-2">
-                        <Volume2 className="h-5 w-5 text-blue-400 animate-pulse" />
+                    
+                    <div className="glass-dark px-8 py-5 rounded-2xl border border-white/10 shadow-2xl max-w-[85%] text-center">
+                      <p className="text-white font-medium flex items-center justify-center gap-4 text-lg">
+                        <span className="relative flex h-3 w-3">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                        </span>
                         "Tell me about your experience as an Electrician..."
                       </p>
+                    </div>
+                  </div>
+                  
+                  {/* Top bar of the "video call" */}
+                  <div className="absolute top-0 inset-x-0 p-6 flex justify-between items-center bg-gradient-to-b from-slate-950/80 to-transparent z-20">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></div>
+                      <span className="text-xs font-semibold text-slate-300 uppercase tracking-widest">Live Interview</span>
+                    </div>
+                    <div className="text-xs font-mono text-slate-300 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 backdrop-blur-md">
+                      02:45
                     </div>
                   </div>
                 </div>
                 
                 {/* Floating UI Elements */}
-                <div className="absolute -bottom-6 -left-6 bg-slate-800 p-4 rounded-2xl shadow-xl border border-slate-700 flex items-center gap-4">
-                  <div className="bg-green-500/20 p-3 rounded-full">
-                    <Mic className="h-6 w-6 text-green-400" />
+                <div className="absolute -bottom-8 -left-8 glass-dark p-5 rounded-2xl shadow-2xl border border-white/10 flex items-center gap-5 animate-float">
+                  <div className="bg-emerald-500/20 p-3.5 rounded-full">
+                    <Mic className="h-6 w-6 text-emerald-400" />
                   </div>
                   <div>
-                    <p className="text-sm text-slate-400 font-medium">Your Turn</p>
-                    <p className="text-white font-bold">Listening...</p>
+                    <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Your Turn</p>
+                    <p className="text-white font-bold text-lg">Listening...</p>
                   </div>
                 </div>
               </div>
@@ -331,14 +834,14 @@ export default function Home() {
       </section>
 
       {/* Trending Jobs Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-50">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-8">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              <h2 className="text-4xl font-display font-bold text-slate-900 mb-4 tracking-tight">
                 {t("Trending Jobs")}
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="text-slate-500 text-lg font-light mb-8">
                 Recently verified opportunities with top GCC employers.
               </p>
               
@@ -353,10 +856,10 @@ export default function Home() {
                   <button
                     key={country.code}
                     onClick={() => setSelectedCountry(selectedCountry === country.code ? null : country.code)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${
+                    className={`flex items-center gap-3 px-5 py-2.5 rounded-full border transition-all duration-300 ${
                       selectedCountry === country.code 
-                        ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-sm' 
-                        : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300 hover:bg-gray-50'
+                        ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20 scale-105' 
+                        : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:bg-blue-50'
                     }`}
                   >
                     <span className="text-xl">{country.flag}</span>
@@ -367,9 +870,9 @@ export default function Home() {
             </div>
             <Link
               to="/jobs"
-              className="hidden md:flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700"
+              className="hidden md:flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 transition-colors group"
             >
-              View all jobs <ArrowRight className="h-5 w-5" />
+              View all jobs <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
@@ -380,11 +883,11 @@ export default function Home() {
               <JobCard key={job.id} {...job} />
             ))}
             {trendingJobs.filter(job => !selectedCountry || job.location.includes(selectedCountry)).length === 0 && (
-              <div className="col-span-full text-center py-12 bg-white rounded-2xl border border-gray-100">
-                <p className="text-gray-500 font-medium">No trending jobs found for this country.</p>
+              <div className="col-span-full text-center py-16 bg-white rounded-3xl border border-slate-100 shadow-sm">
+                <p className="text-slate-500 text-lg font-light">No trending jobs found for this country.</p>
                 <button 
                   onClick={() => setSelectedCountry(null)}
-                  className="mt-4 text-blue-600 font-medium hover:underline"
+                  className="mt-4 text-blue-600 font-semibold hover:underline"
                 >
                   Clear filter
                 </button>
@@ -392,10 +895,10 @@ export default function Home() {
             )}
           </div>
 
-          <div className="mt-10 text-center md:hidden">
+          <div className="mt-12 text-center md:hidden">
             <Link
               to="/jobs"
-              className="inline-flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 bg-blue-50 px-6 py-3 rounded-xl"
+              className="inline-flex items-center gap-2 text-white font-semibold bg-blue-600 hover:bg-blue-700 px-8 py-4 rounded-xl transition-colors shadow-lg shadow-blue-600/20"
             >
               View all jobs <ArrowRight className="h-5 w-5" />
             </Link>
@@ -404,35 +907,42 @@ export default function Home() {
       </section>
 
       {/* Worker of the Month Spotlight */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-t border-gray-100">
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white border-t border-slate-100">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-blue-50 rounded-3xl overflow-hidden shadow-sm border border-blue-100 flex flex-col lg:flex-row">
-            <div className="lg:w-1/2 relative">
+          <div className="bg-slate-50 rounded-[3rem] overflow-hidden shadow-sm border border-slate-100 flex flex-col lg:flex-row group hover:shadow-xl transition-all duration-500">
+            <div className="lg:w-1/2 relative overflow-hidden">
               <img 
                 src="https://picsum.photos/seed/worker/800/800" 
                 alt="Ramesh, AC Tech in Dubai" 
-                className="w-full h-full object-cover aspect-square lg:aspect-auto"
+                className="w-full h-full object-cover aspect-square lg:aspect-auto group-hover:scale-105 transition-transform duration-700"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                <button className="bg-white/90 hover:bg-white text-blue-600 rounded-full p-4 shadow-lg transition-transform hover:scale-105">
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent flex items-center justify-center">
+                <button className="bg-white/90 hover:bg-white text-blue-600 rounded-full p-5 shadow-2xl transition-all hover:scale-110 backdrop-blur-sm">
                   <PlayCircle className="h-12 w-12" />
                 </button>
               </div>
             </div>
-            <div className="lg:w-1/2 p-8 md:p-12 flex flex-col justify-center">
-              <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-bold mb-6 w-max">
-                <span className="text-lg">🏆</span> Worker of the Month
+            <div className="lg:w-1/2 p-10 md:p-16 flex flex-col justify-center relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-[80px] -mr-32 -mt-32 pointer-events-none"></div>
+              
+              <div className="inline-flex items-center gap-3 bg-white text-slate-800 px-4 py-2 rounded-full text-sm font-bold mb-8 w-max shadow-sm border border-slate-100 relative z-10">
+                <span className="text-xl">🏆</span> Worker of the Month
               </div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              <h2 className="text-3xl md:text-4xl font-display font-bold text-slate-900 mb-6 leading-tight relative z-10">
                 "GulfPath changed my life. No agents, no fees."
               </h2>
-              <p className="text-xl text-gray-600 mb-8 italic">
+              <p className="text-xl text-slate-600 mb-10 font-light leading-relaxed relative z-10">
                 "I used to pay agents thousands of rupees and wait for months. With GulfPath, I applied directly to a verified company. Now I'm working as an AC Technician in Dubai, and my company paid for my visa and flight."
               </p>
-              <div>
-                <p className="font-bold text-gray-900 text-lg">Ramesh Kumar</p>
-                <p className="text-gray-500">AC Technician • Dubai, UAE</p>
+              <div className="relative z-10 flex items-center gap-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-xl font-bold text-blue-700">
+                  R
+                </div>
+                <div>
+                  <p className="font-bold text-slate-900 text-lg">Ramesh Kumar</p>
+                  <p className="text-slate-500 text-sm">AC Technician • Dubai, UAE</p>
+                </div>
               </div>
             </div>
           </div>
@@ -440,13 +950,13 @@ export default function Home() {
       </section>
 
       {/* Blogs Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 border-t border-gray-100">
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-slate-50 border-t border-slate-100">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-4xl font-display font-bold text-slate-900 mb-4 tracking-tight">
               Latest from GulfPath Blog
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-slate-500 max-w-2xl mx-auto text-lg font-light">
               Stay updated with the latest news, tips, and guides for working in the GCC.
             </p>
           </div>
@@ -471,16 +981,18 @@ export default function Home() {
                 category: "Career Guide"
               }
             ].map((blog, index) => (
-              <div key={index} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 transition-transform hover:-translate-y-1 hover:shadow-md">
-                <img src={blog.image} alt={blog.title} className="w-full h-48 object-cover" referrerPolicy="no-referrer" />
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">{blog.category}</span>
-                    <span className="text-xs text-gray-500">{blog.date}</span>
+              <div key={index} className="bg-white rounded-[2rem] overflow-hidden shadow-sm border border-slate-100 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl group">
+                <div className="overflow-hidden">
+                  <img src={blog.image} alt={blog.title} className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
+                </div>
+                <div className="p-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1 rounded-full">{blog.category}</span>
+                    <span className="text-xs text-slate-400 font-medium">{blog.date}</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 leading-tight">{blog.title}</h3>
-                  <Link to="#" className="text-blue-600 font-semibold hover:text-blue-700 inline-flex items-center gap-1">
-                    Read more <ArrowRight className="h-4 w-4" />
+                  <h3 className="text-xl font-display font-bold text-slate-900 mb-4 leading-snug group-hover:text-blue-600 transition-colors">{blog.title}</h3>
+                  <Link to="#" className="text-blue-600 font-semibold hover:text-blue-700 inline-flex items-center gap-2 group/link">
+                    Read more <ArrowRight className="h-4 w-4 group-hover/link:translate-x-1 transition-transform" />
                   </Link>
                 </div>
               </div>
@@ -490,37 +1002,39 @@ export default function Home() {
       </section>
 
       {/* Contact / Newsletter Form */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-t border-gray-100 pb-24">
-        <div className="max-w-4xl mx-auto bg-blue-900 rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
-          <div className="absolute inset-0 bg-blue-800/50 blur-3xl rounded-full w-96 h-96 -top-20 -right-20"></div>
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white border-t border-slate-100 pb-32">
+        <div className="max-w-5xl mx-auto bg-slate-950 rounded-[3rem] p-8 md:p-16 shadow-2xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-blue-600/20 blur-[100px] rounded-full w-[600px] h-[600px] -top-40 -right-40 pointer-events-none"></div>
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-10 pointer-events-none"></div>
+          
           <div className="relative z-10 text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-6 tracking-tight">
               Get Job Alerts on WhatsApp
             </h2>
-            <p className="text-blue-200 mb-8 max-w-xl mx-auto">
+            <p className="text-slate-400 mb-10 max-w-2xl mx-auto text-lg font-light">
               Subscribe to receive the latest verified job opportunities directly to your phone. No spam, only real jobs.
             </p>
-            <form className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto" onSubmit={(e) => e.preventDefault()}>
+            <form className="flex flex-col sm:flex-row gap-4 max-w-3xl mx-auto" onSubmit={(e) => e.preventDefault()}>
               <input 
                 type="text" 
                 placeholder="Your Name" 
-                className="flex-1 bg-white/10 border border-blue-700/50 text-white placeholder-blue-300 px-6 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 glass-dark border border-white/10 text-white placeholder-slate-400 px-6 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-lg"
                 required
               />
               <input 
                 type="tel" 
                 placeholder="WhatsApp Number" 
-                className="flex-1 bg-white/10 border border-blue-700/50 text-white placeholder-blue-300 px-6 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 glass-dark border border-white/10 text-white placeholder-slate-400 px-6 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-lg"
                 required
               />
               <button 
                 type="submit" 
-                className="bg-blue-500 hover:bg-blue-400 text-white font-bold px-8 py-4 rounded-xl transition-colors whitespace-nowrap"
+                className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-8 py-4 rounded-2xl transition-all whitespace-nowrap shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_30px_rgba(37,99,235,0.5)] text-lg"
               >
                 Subscribe Now
               </button>
             </form>
-            <p className="text-xs text-blue-300 mt-4">
+            <p className="text-sm text-slate-500 mt-6 font-light">
               By subscribing, you agree to our Privacy Policy and Terms of Service.
             </p>
           </div>

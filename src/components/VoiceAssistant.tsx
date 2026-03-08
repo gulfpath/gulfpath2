@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import { Mic, X, Loader2, Volume2, User, MessageCircle, MapPin, ClipboardCheck, CheckCircle2, AlertTriangle, Phone, Wifi } from 'lucide-react';
 
@@ -153,6 +154,25 @@ const SuccessView = ({ userData }: { userData: any }) => {
           Reminder: No free flight tickets. Medical (GAMCA) is paid by the candidate.
         </p>
       </div>
+
+      <div className="mt-6 flex flex-col sm:flex-row justify-center gap-4 w-full">
+        <a 
+          href="https://wa.me/?text=GulfPath%20Office%20Address:%20H.NO.%2004-009/NR.%20SURVEY%20NO.%2043,%20Suchitra%20Rd,%20Kompally,%20Hyderabad,%20Telangana%20500067.%20Working%20Hours:%209:00%20AM%20to%206:00%20PM." 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-sm text-sm"
+        >
+          <MessageCircle className="h-4 w-4" />
+          WhatsApp Office
+        </a>
+        <a 
+          href="tel:+914012345678"
+          className="flex-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 py-3 px-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-sm text-sm"
+        >
+          <Phone className="h-4 w-4" />
+          Talk to a Human
+        </a>
+      </div>
     </div>
   );
 };
@@ -168,10 +188,45 @@ export default function VoiceAssistant() {
   const [isRegistrationComplete, setIsRegistrationComplete] = useState(false);
   const [userData, setUserData] = useState<any>(null);
   const [isLowBandwidth, setIsLowBandwidth] = useState(false);
+  const [bubbleMessage, setBubbleMessage] = useState("");
+  const [showBubble, setShowBubble] = useState(true);
   
+  const location = useLocation();
   const sessionRef = useRef<any>(null);
   const playerRef = useRef<PCMPlayer | null>(null);
   const recorderRef = useRef<PCMRecorder | null>(null);
+
+  useEffect(() => {
+    // Contextual greeting based on where the user is
+    const path = location.pathname;
+    if (path === '/jobs') {
+      setBubbleMessage(`${userData?.name || 'Bhai'}, yahan saare kaam verified hain. Aapko kaunsa kaam chahiye?`);
+    } else if (path === '/profile') {
+      setBubbleMessage("Documents upload karne mein koi dikkat toh nahi ho rahi?");
+    } else if (path === '/mock-interview') {
+      setBubbleMessage("Mr. Gulfpath ke interview ke liye taiyar hain? Main help karunga.");
+    } else if (path === '/vault') {
+      setBubbleMessage("Aapke saare documents yahan safe hain.");
+    } else {
+      setBubbleMessage("Namaste! Main Sathi hoon. Kya main aapki madad kar sakta hoon?");
+    }
+    setShowBubble(true);
+    
+    // Auto-hide bubble after some time
+    const timer = setTimeout(() => setShowBubble(false), 8000);
+    return () => clearTimeout(timer);
+  }, [location.pathname, userData?.name]);
+
+  useEffect(() => {
+    const handleOpen = () => {
+      setIsOpen(true);
+      // Optionally auto-start the session here if desired, 
+      // but letting them click the mic inside the modal is safer for browser audio policies.
+    };
+
+    window.addEventListener('open-voice-assistant', handleOpen);
+    return () => window.removeEventListener('open-voice-assistant', handleOpen);
+  }, []);
 
   const startSession = async () => {
     setIsConnecting(true);
@@ -179,6 +234,41 @@ export default function VoiceAssistant() {
     setTranscript([]);
     setIsRegistrationComplete(false);
     setUserData(null);
+
+    const path = location.pathname;
+    let contextSpecificInstructions = "";
+    
+    if (path === '/jobs') {
+      contextSpecificInstructions = `
+**Current Context (Jobs Page):** The user is currently browsing available jobs. 
+- Start with: "Namaste! Main Sathi hoon. Aap abhi hamare jobs page par hain. Aapko kis tarah ka kaam chahiye? Jaise electrician, plumber, ya driver?"
+- Focus on understanding their trade and matching them with jobs.
+`;
+    } else if (path === '/profile') {
+      contextSpecificInstructions = `
+**Current Context (Profile Page):** The user is on their profile/document upload page.
+- Start with: "Namaste! Main Sathi hoon. Kya aapko apne documents (jaise passport ya photo) upload karne mein koi madad chahiye?"
+- Focus on helping them complete their profile and explaining why documents are needed.
+`;
+    } else if (path === '/mock-interview') {
+      contextSpecificInstructions = `
+**Current Context (Mock Interview Page):** The user is preparing for an interview.
+- Start with: "Namaste! Main Sathi hoon. Kya aap interview ki practice karna chahte hain? Main aapse kuch sawal puchunga jaise company wale puchte hain."
+- Focus on conducting a friendly mock interview based on their trade.
+`;
+    } else if (path === '/vault') {
+      contextSpecificInstructions = `
+**Current Context (Vault Page):** The user is viewing their secure document vault.
+- Start with: "Namaste! Main Sathi hoon. Yahan aapke saare documents safe hain. Kya aapko kisi document ke baare mein janna hai?"
+- Focus on reassuring them about document security and explaining GAMCA/Visa documents if asked.
+`;
+    } else {
+      contextSpecificInstructions = `
+**Phase 1: The Introduction (The Hook)**
+- Start with: "Namaste! Main Sathi hoon GulfPath se. Humara kaam hai aapko Dubai aur Saudi mein bina kisi agent-fee ke sahi kaam dilana. Humara bada daftar Hyderabad, Kompally mein hai, isliye aap humpar pura bharosa kar sakte hain."
+- Explain: "GulfPath par hum aapse koi recruitment fee nahi lete. Lekin yaad rakhein, flight tickets free nahi milti aur GAMCA medical ka kharcha (₹5,000-₹8,000) aapko khud dena hoga."
+`;
+    }
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -193,9 +283,21 @@ export default function VoiceAssistant() {
           },
           systemInstruction: `**Role:** You are "Sathi," the official guide for GulfPath. Your mission is to move users from "Curiosity" to a "Verified Visit" at our Hyderabad office.
 
-**Phase 1: The Introduction (The Hook)**
-- Start with: "Namaste! Main Sathi hoon GulfPath se. Humara kaam hai aapko Dubai aur Saudi mein bina kisi agent-fee ke sahi kaam dilana. Humara bada daftar Hyderabad, Kompally mein hai, isliye aap humpar pura bharosa kar sakte hain."
-- Explain: "GulfPath par hum aapse koi recruitment fee nahi lete. Lekin yaad rakhein, flight tickets free nahi milti aur GAMCA medical ka kharcha (₹5,000-₹8,000) aapko khud dena hoga."
+**Adaptive Language & The "Language Shield":** 
+- You must seamlessly switch between Hindi, Telugu, and Tamil mid-conversation based on the language the user speaks to you. 
+- Always match their language and use respectful cultural honorifics (e.g., "Bhai" in Hindi, "Garu" or "Anna" in Telugu, "Thambi" or "Anna" in Tamil).
+- **CRITICAL - Desi Explanations:** English is a barrier for our candidates. You MUST translate technical recruitment terms into simple, relatable "Desi" explanations. 
+  - Instead of "CV" or "Resume", use "Parcha" or "Kaam ka kagaz".
+  - Instead of "Employment Visa", use "Kaam wala Visa" or "Company ka Visa".
+  - Instead of "Offer Letter", use "Company ka Bulawa" or "Pagar ka kagaz".
+  - Instead of "Medical Fitness Certificate", use "GAMCA Medical" or "Doctor ki Parchi".
+  - Instead of "Deploy", use "Flight udna" or "Bahar bhejna".
+  - Instead of "Client Interview", use "Saab se baat" or "Company wale se mulakat".
+
+${contextSpecificInstructions}
+
+**Scam-Shield Interrupt (CRITICAL)**
+- If the user ever mentions "security deposit", "advance payment", or "agent fee", IMMEDIATELY stop the normal flow and say: "Savdhaan! GulfPath kabhi bhi advance ya security deposit nahi mangta. Agar kisi ne aapse paise mange hain, toh woh fraud hai. Kripya turant hamare Hyderabad office mein report karein."
 
 **Phase 2: Contact Collection (The Permission)**
 - Ask: "Kya main aapki thodi jankari note kar sakta hoon taaki hamari Hyderabad team aapse baat kar sake? Sabse pehle, aapka pura naam kya hai?"
@@ -318,16 +420,32 @@ Extract into JSON: { "full_name": string, "phone": string, "location": string, "
 
   return (
     <>
-      {/* Floating Action Button */}
-      <button
-        onClick={toggleAssistant}
-        className={`fixed bottom-24 right-6 md:bottom-8 md:right-8 z-50 p-4 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center gap-3 ${
-          isOpen ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'
-        }`}
-      >
-        {isOpen ? <X className="h-8 w-8" /> : <Mic className="h-8 w-8" />}
-        {!isOpen && <span className="font-bold hidden md:inline pr-2">Talk to Sathi</span>}
-      </button>
+      {/* Floating Action Button & Bubble */}
+      <div className="fixed bottom-24 right-6 md:bottom-8 md:right-8 z-50 flex flex-col items-end">
+        {/* Speech Bubble */}
+        {!isOpen && showBubble && (
+          <div className="mb-4 p-4 bg-white border-2 border-blue-500 rounded-2xl shadow-xl max-w-[250px] sm:max-w-xs animate-in fade-in slide-in-from-bottom-4 duration-300 relative">
+            <p className="text-gray-800 font-medium text-sm">{bubbleMessage}</p>
+            {/* Triangle pointer */}
+            <div className="absolute -bottom-2 right-6 w-4 h-4 bg-white border-b-2 border-r-2 border-blue-500 transform rotate-45"></div>
+          </div>
+        )}
+
+        <button
+          onClick={toggleAssistant}
+          className={`p-4 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center gap-3 relative ${
+            isOpen ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white hover:scale-105 border-4 border-white'
+          }`}
+        >
+          {isOpen ? <X className="h-8 w-8" /> : <Mic className="h-8 w-8" />}
+          {!isOpen && <span className="font-bold hidden md:inline pr-2">Talk to Sathi</span>}
+          
+          {/* Pulsing indicator for 'Active' status */}
+          {!isOpen && (
+            <span className="absolute top-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></span>
+          )}
+        </button>
+      </div>
 
       {/* Full Screen Overlay */}
       {isOpen && (
@@ -420,27 +538,6 @@ Extract into JSON: { "full_name": string, "phone": string, "location": string, "
               >
                 Start Conversation
               </button>
-            )}
-
-            {isConnected && !isRegistrationComplete && (
-              <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
-                <a 
-                  href="https://wa.me/?text=GulfPath%20Office%20Address:%20H.NO.%2004-009/NR.%20SURVEY%20NO.%2043,%20Suchitra%20Rd,%20Kompally,%20Hyderabad,%20Telangana%20500067.%20Working%20Hours:%209:00%20AM%20to%206:00%20PM." 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="bg-green-500 hover:bg-green-600 text-white py-3 px-6 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-lg"
-                >
-                  <MessageCircle className="h-5 w-5" />
-                  Send Office Address to WhatsApp
-                </a>
-                <a 
-                  href="tel:+914012345678"
-                  className="bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50 py-3 px-6 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shadow-sm"
-                >
-                  <Phone className="h-5 w-5" />
-                  Talk to a Human
-                </a>
-              </div>
             )}
           </div>
         </div>

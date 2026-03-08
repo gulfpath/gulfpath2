@@ -60,7 +60,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">Email Us</p>
-                    <p className="text-gray-600 mt-1">support@gulfpath.in</p>
+                    <p className="text-gray-600 mt-1">info@gulfpath.in</p>
                     <p className="text-sm text-gray-500 mt-1">We aim to reply within 24 hours</p>
                   </div>
                 </div>
@@ -72,8 +72,8 @@ export default function Contact() {
                   <div>
                     <p className="font-semibold text-gray-900">Head Office</p>
                     <p className="text-gray-600 mt-1">
-                      123, Cyber Hub, Gurugram,<br />
-                      Haryana 122002, India
+                      NEAR, H.NO. 04-009/NR, (OLD NO - 3-24), SURVEY NO. 43,<br />
+                      Suchitra Rd, Kompally, Hyderabad, Telangana 500067
                     </p>
                   </div>
                 </div>

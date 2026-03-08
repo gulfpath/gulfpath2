@@ -100,13 +100,38 @@ export default function Footer() {
               </li>
               <li className="flex items-start gap-3">
                 <Mail className="h-5 w-5 text-gray-500 shrink-0" />
-                <span>support@gulfpath.in</span>
+                <span>info@gulfpath.in</span>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-gray-500 shrink-0" />
-                <span>123, Cyber Hub, Gurugram, Haryana 122002, India</span>
+                <span>NEAR, H.NO. 04-009/NR, (OLD NO - 3-24), SURVEY NO. 43, Suchitra Rd, Kompally, Hyderabad, Telangana 500067</span>
               </li>
             </ul>
+            
+            {/* Google Maps Embed for Physical Presence */}
+            <div className="rounded-xl overflow-hidden border border-gray-800 h-32 relative group mt-6">
+              <iframe 
+                src="https://maps.google.com/maps?q=Suchitra%20Rd,%20Kompally,%20Hyderabad,%20Telangana%20500067&t=&z=14&ie=UTF8&iwloc=&output=embed" 
+                width="100%" 
+                height="100%" 
+                style={{ border: 0 }} 
+                allowFullScreen={false} 
+                loading="lazy" 
+                referrerPolicy="no-referrer-when-downgrade"
+                className="grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
+              ></iframe>
+              <a 
+                href="https://maps.google.com/maps?q=Suchitra%20Rd,%20Kompally,%20Hyderabad,%20Telangana%20500067" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              >
+                <span className="bg-blue-600 text-white text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
+                  <MapPin className="w-3 h-3" />
+                  View on Maps
+                </span>
+              </a>
+            </div>
           </div>
         </div>
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500">

@@ -1,13 +1,34 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Globe, ShieldCheck, User, Menu, X } from "lucide-react";
+import { Globe, ShieldCheck, User, Menu, X, LogOut, UserPlus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    const role = localStorage.getItem("userRole");
+    setIsAuthenticated(!!token);
+    setUserRole(role);
+  }, [location.pathname]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("isPremiumEmployer");
+    setIsAuthenticated(false);
+    setUserRole(null);
+    navigate("/");
+  };
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
@@ -16,8 +37,9 @@ export default function Navbar() {
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Find Jobs", path: "/jobs" },
-    { name: "My Profile", path: "/profile" },
-    { name: "Employer Portal", path: "/employers" },
+    ...(userRole === 'worker' ? [{ name: "My Profile", path: "/profile" }] : []),
+    ...(userRole === 'worker' ? [{ name: "PDB Hub", path: "/pdb-hub" }] : []),
+    ...(userRole === 'employer' ? [{ name: "Employer Portal", path: "/employer-dashboard" }] : []),
     { name: "Contact Us", path: "/contact" },
   ];
 
@@ -61,14 +83,33 @@ export default function Navbar() {
               </select>
             </div>
 
-            <div className="flex items-center gap-4">
-              <Link
-                to="/login"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors whitespace-nowrap flex items-center gap-2"
-              >
-                <User className="w-4 h-4" />
-                {t("Login")}
-              </Link>
+            <div className="flex items-center gap-3">
+              {isAuthenticated ? (
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition-colors whitespace-nowrap flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="text-blue-600 bg-blue-50 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors whitespace-nowrap flex items-center gap-2"
+                  >
+                    <User className="w-4 h-4" />
+                    {t("Login")}
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors whitespace-nowrap flex items-center gap-2"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
@@ -123,14 +164,40 @@ export default function Navbar() {
                     <option value="hi">Hindi (हिंदी)</option>
                   </select>
                 </div>
-                <Link
-                  to="/login"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="mt-2 flex items-center justify-center gap-2 w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                >
-                  <User className="w-4 h-4" />
-                  {t("Login")}
-                </Link>
+                
+                <div className="mt-4 space-y-2">
+                  {isAuthenticated ? (
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="flex items-center justify-center gap-2 w-full bg-red-50 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-100 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  ) : (
+                    <>
+                      <Link
+                        to="/login"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center justify-center gap-2 w-full bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition-colors"
+                      >
+                        <User className="w-4 h-4" />
+                        {t("Login")}
+                      </Link>
+                      <Link
+                        to="/register"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center justify-center gap-2 w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        Sign Up
+                      </Link>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>

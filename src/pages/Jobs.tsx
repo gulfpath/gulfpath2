@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import { Search, MapPin, Briefcase, Mic, ShieldCheck, Home, FileText, Zap, Wrench, Truck, HardHat, Bell, X, Filter, ChevronDown } from "lucide-react";
 import JobCard from "../components/JobCard";
 import { jobsData } from "../data/jobs";
 
 export default function Jobs() {
   const { t } = useTranslation();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -15,14 +17,42 @@ export default function Jobs() {
   const [salaryRange, setSalaryRange] = useState<string>("all");
   const searchRef = useRef<HTMLDivElement>(null);
 
-  const popularKeywords = [
-    "AC Technician", "Heavy Driver", "Electrician", "Plumber", "Mason", "Dubai", "Saudi", "Qatar", "Oman"
+  const jobSuggestions = [
+    { name: "Driver", category: "Transport", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Heavy Vehicle Driver", category: "Transport", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Light Vehicle Driver", category: "Transport", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Plumber", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Pipefitter", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Electrician", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Residential Electrician", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Industrial Electrician", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Mason", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Carpenter", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Welder", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Painter", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Security Guard", category: "Services", icon: <ShieldCheck className="w-4 h-4 text-gray-400" /> },
+    { name: "HVAC Technician", category: "Maintenance", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Crane Operator", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Scaffolder", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Steel Fixer", category: "Construction", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Helper", category: "General", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Cleaner", category: "Services", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
+    { name: "Cook", category: "Hospitality", icon: <Briefcase className="w-4 h-4 text-gray-400" /> },
   ];
 
   const suggestions = useMemo(() => {
     if (!searchTerm) return [];
-    return popularKeywords.filter(k => k.toLowerCase().includes(searchTerm.toLowerCase()) && k.toLowerCase() !== searchTerm.toLowerCase());
+    return jobSuggestions.filter(job => 
+      job.name.toLowerCase().includes(searchTerm.toLowerCase()) && job.name.toLowerCase() !== searchTerm.toLowerCase()
+    ).slice(0, 6);
   }, [searchTerm]);
+
+  useEffect(() => {
+    const search = searchParams.get("search");
+    if (search !== null) {
+      setSearchTerm(search);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -33,6 +63,20 @@ export default function Jobs() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleSearchUpdate = (newTerm: string) => {
+    setSearchTerm(newTerm);
+    setShowSuggestions(false);
+    
+    // Update URL params without full page reload
+    const url = new URL(window.location.href);
+    if (newTerm) {
+      url.searchParams.set("search", newTerm);
+    } else {
+      url.searchParams.delete("search");
+    }
+    window.history.pushState({}, "", url);
+  };
 
   const toggleFilter = (filter: string) => {
     setActiveFilters(prev => 
@@ -131,11 +175,20 @@ export default function Jobs() {
                 placeholder="e.g., Plumber in Dubai..."
                 className="w-full bg-transparent border-none focus:ring-0 text-gray-900 placeholder-gray-500 py-4 outline-none text-lg"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  // Optionally update URL as they type, or wait for enter/blur.
+                  // For now, let's just update state to keep it fast.
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearchUpdate(searchTerm);
+                  }
+                }}
                 onFocus={() => setShowSuggestions(true)}
               />
               {searchTerm && (
-                <button onClick={() => setSearchTerm("")} className="p-2 text-gray-400 hover:text-gray-600">
+                <button onClick={() => handleSearchUpdate("")} className="p-2 text-gray-400 hover:text-gray-600">
                   <X className="h-5 w-5" />
                 </button>
               )}
@@ -159,8 +212,7 @@ export default function Jobs() {
                       <button 
                         key={suggestion}
                         onClick={() => {
-                          setSearchTerm(suggestion);
-                          setShowSuggestions(false);
+                          handleSearchUpdate(suggestion);
                         }}
                         className="bg-gray-50 hover:bg-blue-50 hover:text-blue-700 text-gray-700 px-4 py-2 rounded-xl text-sm font-medium transition-colors border border-gray-200 hover:border-blue-200"
                       >
@@ -170,28 +222,43 @@ export default function Jobs() {
                   </div>
                 </>
               ) : (
-                <>
+                <ul className="-mx-2">
                   {suggestions.length > 0 ? (
-                    <ul className="py-2">
-                      {suggestions.map((suggestion, index) => (
-                        <li key={index}>
-                          <button
-                            onClick={() => {
-                              setSearchTerm(suggestion);
-                              setShowSuggestions(false);
-                            }}
-                            className="w-full text-left px-4 py-3 hover:bg-gray-50 text-gray-700 font-medium flex items-center gap-3"
-                          >
-                            <Search className="h-4 w-4 text-gray-400" />
-                            {suggestion}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
+                    suggestions.map((suggestion, index) => (
+                      <li key={index}>
+                        <button
+                          onClick={() => {
+                            handleSearchUpdate(suggestion.name);
+                          }}
+                          className="w-full text-left px-4 py-3 hover:bg-blue-50 flex items-center justify-between group transition-colors rounded-xl"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-gray-50 rounded-lg group-hover:bg-white transition-colors">
+                              {suggestion.icon}
+                            </div>
+                            <span className="font-medium text-gray-700 group-hover:text-blue-700">
+                              {suggestion.name.split(new RegExp(`(${searchTerm})`, 'gi')).map((part, i) => 
+                                part.toLowerCase() === searchTerm.toLowerCase() ? (
+                                  <span key={i} className="text-blue-600 font-bold">{part}</span>
+                                ) : (
+                                  <span key={i}>{part}</span>
+                                )
+                              )}
+                            </span>
+                          </div>
+                          <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-md group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                            {suggestion.category}
+                          </span>
+                        </button>
+                      </li>
+                    ))
                   ) : (
-                    <p className="text-gray-500 text-sm p-2">Press enter to search for "{searchTerm}"</p>
+                    <div className="px-4 py-4 text-gray-500 text-sm flex items-center gap-2">
+                      <Search className="w-4 h-4" />
+                      No exact matches found. Press Enter to search all jobs for "{searchTerm}".
+                    </div>
                   )}
-                </>
+                </ul>
               )}
             </div>
           )}

@@ -12,6 +12,13 @@ You are "Sathi," an expert Lead Recruitment Agent specializing in the India-to-G
 - Identify GCC-specific compliance requirements (ECR/ECNR, Gulf Return status)
 - Extract experience, skills, and location from unstructured speech
 
+# QUALIFICATION & EDUCATION INSTRUCTIONS
+Your goal is to find out the user's educational status to determine if they are ECR or ECNR and if they qualify for high-salary 'Gold' roles.
+1. Step 1: Ask: 'Bhai, kya aapne 10th pass kiya hai?' (Brother, have you passed 10th?). Explain that 10th pass means faster visa processing (ECNR).
+2. Step 2: If they say yes, ask for their board (State/CBSE). If no, say: 'Koi baat nahi, aapke hunar (skill) ki zyada keemat hai. Hum tab bhi acchi naukri dhoondenge.'
+3. Step 3: Ask about technical training: 'Kya aapne ITI ya koi diploma kiya hai?' (Have you done ITI or a diploma?).
+4. Step 4: If they have a certificate, ask them to take a clear photo of it. Say: 'Iska ek saaf photo kheenchiye, main ise verify kar ke aapke profile par Gold Badge laga dungi!'
+
 # TRADE MAPPING EXAMPLES
 - "Mera kaam wiring ka hai" -> "Residential Electrician"
 - "Main AC theek karta hoon" -> "HVAC Technician"
@@ -50,10 +57,26 @@ export interface SathiProfileResponse {
     target_countries: string[];
     languages_spoken: string[];
     summary: string;
+    qualification_meta?: {
+      schooling_status: "BELOW_10TH" | "10TH_PASS" | "12TH_PASS";
+      passport_status: "ECR" | "ECNR";
+      technical_training: {
+        type: string;
+        trade: string;
+        verified: boolean;
+      };
+    };
   };
   confidence_score: number;
   missing_fields: string[];
   follow_up_questions: string[];
+}
+
+export interface DocumentVerificationResponse {
+  document_valid: boolean;
+  type: string;
+  ecnr_status: string;
+  prn_number?: string;
 }
 
 export const extractProfileFromText = async (text: string): Promise<SathiProfileResponse> => {
@@ -93,7 +116,31 @@ export const extractProfileFromText = async (text: string): Promise<SathiProfile
                   type: Type.ARRAY,
                   items: { type: Type.STRING }
                 },
-                summary: { type: Type.STRING }
+                summary: { type: Type.STRING },
+                qualification_meta: {
+                  type: Type.OBJECT,
+                  nullable: true,
+                  properties: {
+                    schooling_status: {
+                      type: Type.STRING,
+                      enum: ["BELOW_10TH", "10TH_PASS", "12TH_PASS"]
+                    },
+                    passport_status: {
+                      type: Type.STRING,
+                      enum: ["ECR", "ECNR"]
+                    },
+                    technical_training: {
+                      type: Type.OBJECT,
+                      properties: {
+                        type: { type: Type.STRING },
+                        trade: { type: Type.STRING },
+                        verified: { type: Type.BOOLEAN }
+                      },
+                      required: ["type", "trade", "verified"]
+                    }
+                  },
+                  required: ["schooling_status", "passport_status", "technical_training"]
+                }
               },
               required: [
                 "trade_primary",
@@ -128,6 +175,56 @@ export const extractProfileFromText = async (text: string): Promise<SathiProfile
     return JSON.parse(jsonStr) as SathiProfileResponse;
   } catch (error) {
     console.error("Error extracting profile with Sathi:", error);
+    throw error;
+  }
+};
+
+export const verifyDocument = async (
+  base64Image: string,
+  mimeType: string,
+  profileName: string
+): Promise<DocumentVerificationResponse> => {
+  try {
+    const prompt = `Analyze the attached image of the educational document.
+1. Identify Type: Is it a 10th Class Marksheet, an ITI National Trade Certificate (NCTVT), or an SCVT Diploma?
+2. Extract Key Info: Look for Name, Date of Birth, Certificate Number, and the Year of Passing.
+3. Validation Check: Does the name match the user's profile name ('${profileName}')? Is the seal of the 'National Council for Vocational Training' or 'State Board' visible?
+4. Output (JSON): { 'document_valid': true/false, 'type': 'ITI_NCTVT', 'ecnr_status': 'Eligible', 'prn_number': '123456' } (Look for the 2026 SID Permanent Registration Number for PRN)`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-flash-image-preview",
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              data: base64Image.split(',')[1] || base64Image,
+              mimeType: mimeType,
+            },
+          },
+          { text: prompt }
+        ]
+      },
+      config: {
+        // responseMimeType and responseSchema are not supported for nano banana series models
+      }
+    });
+
+    let jsonStr = '';
+    for (const part of response.candidates?.[0]?.content?.parts || []) {
+      if (part.text) {
+        jsonStr += part.text;
+      }
+    }
+
+    // Try to extract JSON from markdown if present
+    const jsonMatch = jsonStr.match(/```json\n([\s\S]*?)\n```/) || jsonStr.match(/```\n([\s\S]*?)\n```/);
+    if (jsonMatch && jsonMatch[1]) {
+      jsonStr = jsonMatch[1];
+    }
+
+    return JSON.parse(jsonStr.trim()) as DocumentVerificationResponse;
+  } catch (error) {
+    console.error("Error verifying document:", error);
     throw error;
   }
 };

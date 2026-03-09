@@ -3,6 +3,7 @@ import { User, Briefcase, FileText, Upload, CheckCircle, MapPin, Phone, Mail, Aw
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { SathiProfileBuilder } from '../components/SathiProfileBuilder';
+import { DocumentVerification } from '../components/DocumentVerification';
 import { GoogleGenAI } from "@google/genai";
 import confetti from 'canvas-confetti';
 
@@ -978,6 +979,21 @@ export default function Profile() {
                           Awaiting
                         </span>
                       </div>
+                    </div>
+
+                    <div className="col-span-1 md:col-span-2 mt-4 mb-2">
+                      <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Education & Technical Training</h4>
+                    </div>
+                    
+                    <div className="col-span-1 md:col-span-2 mb-6">
+                      <DocumentVerification 
+                        profileName={candidate.name} 
+                        onVerified={(data) => {
+                          console.log("Document verified:", data);
+                          // In a real app, you would update the candidate's profile here
+                          // e.g., setCandidate({...candidate, passportStatus: data.ecnr_status === 'Eligible' ? 'ECNR' : 'ECR'})
+                        }} 
+                      />
                     </div>
 
                     <div className="col-span-1 md:col-span-2 mt-4 mb-2">

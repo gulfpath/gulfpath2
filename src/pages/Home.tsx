@@ -520,6 +520,30 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Transparency Log Ticker */}
+      <div className="bg-blue-600 text-white py-3 overflow-hidden border-y border-blue-700">
+        <div className="max-w-7xl mx-auto px-4 flex items-center gap-4">
+          <div className="flex items-center gap-2 shrink-0 font-bold uppercase tracking-wider text-sm bg-blue-800 px-3 py-1 rounded-md">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            Live Updates
+          </div>
+          <div className="relative flex overflow-hidden w-full">
+            <div className="animate-marquee flex items-center gap-12 whitespace-nowrap text-sm font-medium text-blue-100">
+              <span>⚡ 34 Electricians verified at Kompally today</span>
+              <span>✈️ 12 Visas processed this morning for UAE</span>
+              <span>🏢 Al Futtaim Group just posted 50 new Plumber roles</span>
+              <span>✅ 89 Workers completed Pre-Departure Briefing</span>
+              <span>⚡ 34 Electricians verified at Kompally today</span>
+              <span>✈️ 12 Visas processed this morning for UAE</span>
+              <span>🏢 Al Futtaim Group just posted 50 new Plumber roles</span>
+              <span>✅ 89 Workers completed Pre-Departure Briefing</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Trusted Partners / Sliding Logos */}
       <section className="py-10 bg-white border-b border-gray-100 overflow-hidden">
@@ -1360,6 +1384,39 @@ export default function Home() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* GCC Countries Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white border-t border-slate-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-slate-900 mb-4 tracking-tight">
+              Jobs Across the GCC
+            </h2>
+            <p className="text-slate-500 text-lg font-light max-w-2xl mx-auto">
+              Find verified opportunities in top Gulf countries.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {[
+              { code: 'UAE', flag: '🇦🇪', name: 'UAE' },
+              { code: 'KSA', flag: '🇸🇦', name: 'Saudi Arabia' },
+              { code: 'Qatar', flag: '🇶🇦', name: 'Qatar' },
+              { code: 'Kuwait', flag: '🇰🇼', name: 'Kuwait' },
+              { code: 'Oman', flag: '🇴🇲', name: 'Oman' },
+              { code: 'Bahrain', flag: '🇧🇭', name: 'Bahrain' }
+            ].map((country) => (
+              <Link
+                key={country.code}
+                to={`/jobs?location=${country.name}`}
+                className="bg-slate-50 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 border border-slate-100 hover:border-blue-200 hover:bg-blue-50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
+              >
+                <span className="text-5xl drop-shadow-sm group-hover:scale-110 transition-transform duration-300">{country.flag}</span>
+                <span className="font-semibold text-slate-700 group-hover:text-blue-700 text-center">{country.name}</span>
+              </Link>
+            ))}
           </div>
         </div>
       </section>

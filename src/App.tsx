@@ -4,6 +4,7 @@
  */
 
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
@@ -24,6 +25,11 @@ import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import EmployerDashboard from "./pages/EmployerDashboard";
 import StaffDashboard from "./pages/StaffDashboard";
+import CookiePolicy from "./pages/CookiePolicy";
+import CookieSettings from "./pages/CookieSettings";
+import TermsOfUse from "./pages/TermsOfUse";
+import TrustCenter from "./pages/TrustCenter";
+import StaySafe from "./pages/StaySafe";
 import VoiceAssistant from "./components/VoiceAssistant";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./i18n";
@@ -31,6 +37,10 @@ import "./i18n";
 function AppContent() {
   const location = useLocation();
   const isEmployerDashboard = location.pathname === '/employer-dashboard';
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   return (
     <div className="flex flex-col min-h-screen relative">
@@ -69,6 +79,11 @@ function AppContent() {
           <Route path="/faq" element={<FAQ />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/cookie-policy" element={<CookiePolicy />} />
+          <Route path="/cookie-settings" element={<CookieSettings />} />
+          <Route path="/terms-of-use" element={<TermsOfUse />} />
+          <Route path="/trust-center" element={<TrustCenter />} />
+          <Route path="/stay-safe" element={<StaySafe />} />
         </Routes>
       </main>
       {!isEmployerDashboard && <Footer />}

@@ -303,7 +303,8 @@ export default function MockInterview() {
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const base64Data = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+        // Reduce image quality from 0.5 to 0.3 to reduce payload size and lag
+        const base64Data = canvas.toDataURL('image/jpeg', 0.3).split(',')[1];
         setLatestFrame(base64Data);
         sessionRef.current.sendRealtimeInput({
           media: { data: base64Data, mimeType: 'image/jpeg' }
@@ -407,7 +408,8 @@ When generating the feedback for the tool, look for these 3 specific markers:
             });
 
             if (isVideoEnabled) {
-              frameIntervalRef.current = window.setInterval(captureAndSendFrame, 1000);
+              // Increase interval to 2000ms (2 seconds) to reduce load
+              frameIntervalRef.current = window.setInterval(captureAndSendFrame, 2000);
             }
           },
           onmessage: async (message: LiveServerMessage) => {

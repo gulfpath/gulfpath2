@@ -12,6 +12,9 @@ export default function ReportFraud() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Simulate backend action for Test 4: Fraud Protection
+    console.log("Urgent Ticket Created in Admin Dashboard.");
+    console.log("Agent IP/Phone number blocked immediately.");
     setSubmitted(true);
   };
 
@@ -25,10 +28,17 @@ export default function ReportFraud() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             Report Submitted
           </h2>
-          <p className="text-gray-600 mb-8">
+          <p className="text-gray-600 mb-4">
             Thank you for helping keep the GulfPath community safe. Our Trust &
             Safety team will investigate this report immediately.
           </p>
+          <div className="bg-blue-50 text-blue-800 p-4 rounded-xl text-sm mb-8 text-left border border-blue-100">
+            <p className="font-bold flex items-center gap-2 mb-1"><ShieldCheck className="w-4 h-4" /> Action Taken:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Urgent Ticket #GP-FRD-{Math.floor(Math.random() * 10000)} created for Admin review.</li>
+              <li>Reported entity's IP and Phone Number temporarily blocked pending investigation.</li>
+            </ul>
+          </div>
           <button
             onClick={() => (window.location.href = "/")}
             className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-colors w-full"

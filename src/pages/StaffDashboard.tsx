@@ -21,6 +21,7 @@ export default function StaffDashboard() {
         date: '2026-03-07',
         videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4', // Sample video
         summary: 'Excellent technical knowledge of 3-phase wiring and safety protocols. Clear communication in Hindi. Highly recommended for Dubai roles.',
+        technical_training: { verified: true },
         questions: [
           { q: 'Explain 3-phase motor wiring.', a: 'Explained delta and star connections clearly.', score: 5 },
           { q: 'What is the difference between MCB and fuse?', a: 'MCB is reusable, fuse burns out.', score: 4 },
@@ -92,7 +93,14 @@ export default function StaffDashboard() {
                     {candidate.name.charAt(0)}
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">{candidate.name}</h2>
+                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                      {candidate.name}
+                      {candidate.technical_training?.verified && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-500/20 text-yellow-600 border border-yellow-500/30" title="Certified Ustad">
+                          <Star className="w-3 h-3 fill-yellow-500" /> Certified Ustad
+                        </span>
+                      )}
+                    </h2>
                     <p className="text-gray-500 font-medium">{candidate.id}</p>
                   </div>
                 </div>
@@ -216,6 +224,15 @@ export default function StaffDashboard() {
               
               {/* Action Buttons */}
               <div className="flex gap-4">
+                <button 
+                  onClick={() => {
+                    localStorage.setItem('ustad_verified_1', Date.now().toString());
+                    alert('Gold Badge Issued! The Employer Dashboard has been updated instantly.');
+                  }}
+                  className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white py-4 rounded-xl font-bold transition-colors shadow-lg flex items-center justify-center gap-2"
+                >
+                  <Star className="w-5 h-5 fill-white" /> Approve & Issue Gold Badge
+                </button>
                 <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold transition-colors shadow-lg">
                   Proceed to Visa Processing
                 </button>

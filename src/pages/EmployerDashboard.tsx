@@ -3,7 +3,7 @@ import {
   Briefcase, Users, Database, BarChart2, Search, Globe, User, 
   ChevronRight, CheckCircle2, XCircle, FileText, Download, 
   ChevronDown, ChevronUp, MapPin, GraduationCap, Clock, Star,
-  X, Check, AlertCircle, VideoOff, MessageSquare, Calendar, Send, Paperclip, CheckSquare, FileSignature, Filter, Video, PlayCircle, Columns
+  X, Check, AlertCircle, VideoOff, MessageSquare, Calendar, Send, Paperclip, CheckSquare, FileSignature, Filter, Video, PlayCircle, Columns, Zap
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, PieChart, Pie, Cell } from 'recharts';
 
@@ -120,12 +120,51 @@ const MOCK_SOURCE_DATA = [
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 const MOCK_DATABASE = [
-  { id: 1, name: 'Arjun Patel', trade: 'Electrician', location: 'Dubai, UAE', experience: '6 Years', score: 9.2, status: 'Available', gulfReturn: true },
-  { id: 2, name: 'Mohammed Ali', trade: 'HVAC Technician', location: 'Riyadh, KSA', experience: '4 Years', score: 8.5, status: 'Available', gulfReturn: false },
-  { id: 3, name: 'Vikram Singh', trade: 'Plumber', location: 'Doha, Qatar', experience: '8 Years', score: 7.8, status: 'Hired', gulfReturn: true },
-  { id: 4, name: 'Rahul Sharma', trade: 'Carpenter', location: 'Muscat, Oman', experience: '3 Years', score: 6.5, status: 'Available', gulfReturn: false },
-  { id: 5, name: 'Imran Khan', trade: 'Mason', location: 'Manama, Bahrain', experience: '5 Years', score: 8.0, status: 'Available', gulfReturn: true },
-  { id: 6, name: 'David Raj', trade: 'Welder', location: 'Kuwait City, Kuwait', experience: '7 Years', score: 9.0, status: 'Interviewing', gulfReturn: true },
+  { id: 1, name: 'Arjun Patel', trade: 'Electrician', location: 'Dubai, UAE', experience: '6 Years', score: 9.2, status: 'Available', gulfReturn: true, technical_training: { verified: true } },
+  { id: 2, name: 'Mohammed Ali', trade: 'HVAC Technician', location: 'Riyadh, KSA', experience: '4 Years', score: 8.5, status: 'Available', gulfReturn: false, technical_training: { verified: false } },
+  { id: 3, name: 'Vikram Singh', trade: 'Plumber', location: 'Doha, Qatar', experience: '8 Years', score: 7.8, status: 'Hired', gulfReturn: true, technical_training: { verified: true } },
+  { id: 4, name: 'Rahul Sharma', trade: 'Carpenter', location: 'Muscat, Oman', experience: '3 Years', score: 6.5, status: 'Available', gulfReturn: false, technical_training: { verified: false } },
+  { id: 5, name: 'Imran Khan', trade: 'Mason', location: 'Manama, Bahrain', experience: '5 Years', score: 8.0, status: 'Available', gulfReturn: true, technical_training: { verified: true } },
+  { id: 6, name: 'David Raj', trade: 'Welder', location: 'Kuwait City, Kuwait', experience: '7 Years', score: 9.0, status: 'Interviewing', gulfReturn: true, technical_training: { verified: false } },
+];
+
+const MOCK_USTADS = [
+  {
+    id: 1,
+    name: 'Ramesh Kumar',
+    trade: 'Residential Electrician',
+    experience: '4 Years (Residential & Commercial)',
+    visaStatus: 'ECNR - Ready to Fly',
+    score: 9.2,
+    verified: false,
+    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    matchScore: 98,
+    aiInsight: "This candidate (Ramesh) has worked on 220V systems similar to your Dubai Hills project. His 10x10 test shows 100% accuracy in 'Troubleshooting.' He is a 98% Match for your Residential Electrician role."
+  },
+  {
+    id: 2,
+    name: 'Mohammed Ali',
+    trade: 'HVAC Technician',
+    experience: '6 Years (Chillers & VRF)',
+    visaStatus: 'ECR - Clearance Pending',
+    score: 8.8,
+    verified: true,
+    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    matchScore: 92,
+    aiInsight: "Mohammed has extensive experience with Daikin VRF systems, which matches your current site requirements. Strong performance in pressure testing."
+  },
+  {
+    id: 3,
+    name: 'Vikram Singh',
+    trade: 'Plumber / Pipefitter',
+    experience: '5 Years (Commercial Plumbing)',
+    visaStatus: 'ECNR - Ready to Fly',
+    score: 9.5,
+    verified: true,
+    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    matchScore: 95,
+    aiInsight: "Vikram is highly skilled in copper pipe brazing and PVC installations. Perfect match for the upcoming high-rise residential project."
+  }
 ];
 
 // --- COMPONENTS ---
@@ -186,7 +225,7 @@ const ScoreRing = ({ score }: { score: number }) => {
 };
 
 export default function EmployerDashboard() {
-  const [currentView, setCurrentView] = useState<'jobs' | 'applicants' | 'database' | 'analytics' | 'post-job' | 'profile' | 'ats'>('jobs');
+  const [currentView, setCurrentView] = useState<'jobs' | 'applicants' | 'database' | 'analytics' | 'post-job' | 'profile' | 'ats' | 'ustad-stream'>('ustad-stream');
   const [selectedJob, setSelectedJob] = useState<number | null>(null);
   const [selectedApplicant, setSelectedApplicant] = useState<typeof MOCK_APPLICANTS[0] | null>(null);
   const [expandedQa, setExpandedQa] = useState<number | null>(null);
@@ -195,6 +234,22 @@ export default function EmployerDashboard() {
   const [actionApplicant, setActionApplicant] = useState<typeof MOCK_APPLICANTS[0] | null>(null);
   const [interviewType, setInterviewType] = useState<'video' | 'phone' | 'office'>('video');
   const [selectedApplicantsForBulk, setSelectedApplicantsForBulk] = useState<number[]>([]);
+
+  const [ustads, setUstads] = useState(MOCK_USTADS);
+
+  React.useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'ustad_verified_1') {
+        setUstads(prev => prev.map(u => u.id === 1 ? { ...u, verified: true } : u));
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    // Also check on mount
+    if (localStorage.getItem('ustad_verified_1')) {
+      setUstads(prev => prev.map(u => u.id === 1 ? { ...u, verified: true } : u));
+    }
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
   const [dbSearchQuery, setDbSearchQuery] = useState('');
   const [dbFilterTrade, setDbFilterTrade] = useState('All');
@@ -245,6 +300,7 @@ export default function EmployerDashboard() {
         </div>
         
         <div className="p-4 space-y-2 flex-1">
+          <SidebarItem icon={Video} label="Ustad Stream" active={currentView === 'ustad-stream'} onClick={() => setCurrentView('ustad-stream')} />
           <SidebarItem icon={Briefcase} label="Job Postings" active={currentView === 'jobs'} onClick={() => setCurrentView('jobs')} />
           <SidebarItem icon={Users} label="Applicants" active={currentView === 'applicants'} onClick={() => setCurrentView('applicants')} />
           <SidebarItem icon={Columns} label="Smart ATS" active={currentView === 'ats'} onClick={() => setCurrentView('ats')} />
@@ -301,6 +357,159 @@ export default function EmployerDashboard() {
         <div className="flex-1 overflow-auto p-8">
           
           {/* VIEWS */}
+          {currentView === 'ustad-stream' && (
+            <div className="max-w-7xl mx-auto h-full flex gap-6">
+              {/* MAIN FEED */}
+              <div className="flex-1 flex flex-col h-full overflow-hidden">
+                <div className="flex items-center justify-between mb-6 shrink-0">
+                  <div>
+                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                      <Video className="w-6 h-6 text-blue-500" /> Ustad Stream
+                    </h1>
+                    <p className="text-sm text-slate-400">High-volume technical hiring feed</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-medium border border-slate-700 transition-colors flex items-center gap-2">
+                      <Filter className="w-4 h-4" /> Filter Stream
+                    </button>
+                    <button 
+                      onClick={() => alert('All Gold Ustads selected for Bulk Hire.')}
+                      className="bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-400 border border-yellow-500/30 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                    >
+                      <CheckSquare className="w-4 h-4" /> Select All Gold Ustads
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 space-y-8 pb-12">
+                  {ustads.map(ustad => (
+                    <div key={ustad.id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex shadow-xl">
+                      {/* VIDEO SECTION */}
+                      <div className="w-[300px] shrink-0 bg-black relative">
+                        <video 
+                          src={ustad.videoUrl} 
+                          autoPlay 
+                          loop 
+                          muted 
+                          playsInline
+                          className="w-full h-full object-cover opacity-80"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                        <div className="absolute bottom-4 left-4 right-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="bg-black/60 backdrop-blur-md text-white text-xs px-2 py-1 rounded font-medium flex items-center gap-1">
+                              <PlayCircle className="w-3 h-3" /> 30s Intro
+                            </span>
+                            {ustad.verified && (
+                              <span className="bg-yellow-500/20 backdrop-blur-md text-yellow-400 border border-yellow-500/30 text-xs px-2 py-1 rounded font-bold flex items-center gap-1">
+                                <Star className="w-3 h-3 fill-yellow-400" /> Kompally Verified
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-white text-sm font-medium line-clamp-2 leading-snug">
+                            "Hello, my name is {ustad.name}. I have {ustad.experience}..."
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* DETAILS SECTION */}
+                      <div className="flex-1 p-6 flex flex-col">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h2 className="text-2xl font-bold text-white mb-1">{ustad.name}</h2>
+                            <p className="text-blue-400 font-medium">{ustad.trade}</p>
+                          </div>
+                          <div className="text-right cursor-pointer hover:opacity-80 transition-opacity" title="Click to watch Trade Test video">
+                            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-400 font-bold text-xl border border-emerald-500/30 mb-1">
+                              {ustad.score}
+                            </div>
+                            <p className="text-xs text-slate-400 flex items-center gap-1"><PlayCircle className="w-3 h-3" /> 10x10 Trade Score</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mb-6">
+                          <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
+                            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1"><Clock className="w-3 h-3" /> Experience</p>
+                            <p className="text-sm text-slate-200 font-medium">{ustad.experience}</p>
+                          </div>
+                          <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
+                            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 flex items-center gap-1"><Globe className="w-3 h-3" /> Visa Status</p>
+                            <p className="text-sm text-emerald-400 font-medium">{ustad.visaStatus}</p>
+                          </div>
+                        </div>
+
+                        <div className="mt-auto pt-4 border-t border-slate-800 flex items-center gap-3">
+                          <button 
+                            onClick={() => alert(`Conditional Offer Sent to ${ustad.name} via WhatsApp.\n\nFinal Visa Processing will unlock once the worker completes 100% of the PDB Hub.\n\nDisclaimer hardcoded in Digital Offer: "GulfPath is a Zero-Fee platform. Do not pay anyone."`)}
+                            className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
+                          >
+                            <Zap className="w-5 h-5" /> Hire Now
+                          </button>
+                          <button 
+                            onClick={() => alert(`Deep-Dive interview requested with ${ustad.name}.`)}
+                            className="flex-1 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                          >
+                            <Video className="w-5 h-5" /> Schedule Deep-Dive
+                          </button>
+                          <button 
+                            onClick={() => alert(`${ustad.name} added to shortlist.`)}
+                            className="w-12 h-12 shrink-0 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-xl flex items-center justify-center transition-colors"
+                            title="Shortlist"
+                          >
+                            <Star className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* AI MATCH SIDEBAR */}
+              <div className="w-80 shrink-0 flex flex-col h-full">
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 h-full flex flex-col">
+                  <div className="flex items-center gap-2 mb-6">
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                      <Star className="w-4 h-4 text-blue-400" />
+                    </div>
+                    <h2 className="text-lg font-bold text-white">AI Match Analytics</h2>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-6">
+                    {ustads.map(ustad => (
+                      <div key={`ai-${ustad.id}`} className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-slate-200 text-sm">{ustad.name}</h3>
+                          <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">
+                            {ustad.matchScore}% Match
+                          </span>
+                        </div>
+                        <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700 relative">
+                          <div className="absolute -left-1.5 top-4 w-3 h-3 bg-blue-500 rounded-full border-2 border-slate-900"></div>
+                          <p className="text-sm text-slate-300 leading-relaxed pl-2">
+                            <span className="font-medium text-blue-400">AI Insight: </span>
+                            {ustad.aiInsight}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="pt-6 mt-6 border-t border-slate-800">
+                    <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                      <p className="text-xs text-slate-400 mb-2 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Data Security Active
+                      </p>
+                      <p className="text-[10px] text-slate-500 leading-tight">
+                        Only verified businesses with a G-ID can view these profiles. Videos are protected from unauthorized downloading.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {currentView === 'jobs' && (
             <div className="max-w-6xl mx-auto space-y-6">
               <div className="flex items-center justify-between">
@@ -725,7 +934,14 @@ export default function EmployerDashboard() {
                       filteredDatabase.map(candidate => (
                         <tr key={candidate.id} className="hover:bg-slate-800/30 transition-colors">
                           <td className="p-4">
-                            <div className="font-medium text-white">{candidate.name}</div>
+                            <div className="font-medium text-white flex items-center gap-2">
+                              {candidate.name}
+                              {candidate.technical_training?.verified && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30" title="Certified Ustad">
+                                  <Star className="w-3 h-3 fill-yellow-400" /> Certified Ustad
+                                </span>
+                              )}
+                            </div>
                             {candidate.gulfReturn && (
                               <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                                 <CheckCircle2 className="w-3 h-3" /> Gulf Return

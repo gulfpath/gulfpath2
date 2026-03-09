@@ -159,12 +159,20 @@ export default function Profile() {
       { id: 3, name: 'Medical Fitness.jpg', type: 'Image', date: 'Nov 02, 2023', verified: false },
       { id: 4, name: 'Resume_Updated.pdf', type: 'PDF', date: 'Jan 10, 2024', verified: false }
     ],
-    aiScore: 8.5
+    aiScore: 8.5,
+    certifications: ['DEWA Approved Electrician', 'OSHA 30-Hour Construction Safety'],
+    drivingLicense: {
+      hasLicense: true,
+      type: 'Light Vehicle',
+      country: 'UAE',
+      expiry: '2025-10-15'
+    }
   });
 
   // Edit State
   const [editData, setEditData] = useState({ ...candidate });
   const [newSkill, setNewSkill] = useState('');
+  const [newCertification, setNewCertification] = useState('');
 
   const handleEditClick = (section: 'overview' | 'experience' | 'documents' | 'header') => {
     setEditData({ ...candidate });
@@ -195,6 +203,24 @@ export default function Profile() {
 
   const removeSkill = (skillToRemove: string) => {
     setEditData({ ...editData, skills: editData.skills.filter(s => s !== skillToRemove) });
+  };
+
+  const addCertification = () => {
+    if (newCertification.trim() && !editData.certifications.includes(newCertification.trim())) {
+      setEditData({ ...editData, certifications: [...editData.certifications, newCertification.trim()] });
+      setNewCertification('');
+    }
+  };
+
+  const removeCertification = (certToRemove: string) => {
+    setEditData({ ...editData, certifications: editData.certifications.filter(c => c !== certToRemove) });
+  };
+
+  const handleDrivingLicenseChange = (field: string, value: any) => {
+    setEditData({
+      ...editData,
+      drivingLicense: { ...editData.drivingLicense, [field]: value }
+    });
   };
 
   const handleWorkHistoryChange = (id: number, field: string, value: string) => {
@@ -705,6 +731,82 @@ export default function Profile() {
                       <button onClick={addSkill} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">Add</button>
                     </div>
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Certifications</label>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {editData.certifications.map((cert, idx) => (
+                        <span key={idx} className="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg text-sm font-medium border border-emerald-100 flex items-center gap-2">
+                          {cert}
+                          <button onClick={() => removeCertification(cert)} className="text-emerald-400 hover:text-emerald-600"><X className="w-3 h-3" /></button>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        value={newCertification}
+                        onChange={(e) => setNewCertification(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && addCertification()}
+                        placeholder="Add a new certification"
+                        className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      />
+                      <button onClick={addCertification} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">Add</button>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Driving License Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center col-span-1 md:col-span-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            checked={editData.drivingLicense.hasLicense} 
+                            onChange={(e) => handleDrivingLicenseChange('hasLicense', e.target.checked)} 
+                            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+                          />
+                          <span className="text-sm font-medium text-gray-700">I have a valid driving license</span>
+                        </label>
+                      </div>
+                      
+                      {editData.drivingLicense.hasLicense && (
+                        <>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">License Type</label>
+                            <select 
+                              value={editData.drivingLicense.type} 
+                              onChange={(e) => handleDrivingLicenseChange('type', e.target.value)} 
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                            >
+                              <option value="Light Vehicle">Light Vehicle</option>
+                              <option value="Heavy Vehicle">Heavy Vehicle</option>
+                              <option value="Motorcycle">Motorcycle</option>
+                              <option value="Equipment Operator">Equipment Operator</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Issuing Country</label>
+                            <input 
+                              type="text" 
+                              value={editData.drivingLicense.country} 
+                              onChange={(e) => handleDrivingLicenseChange('country', e.target.value)} 
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none" 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                            <input 
+                              type="date" 
+                              value={editData.drivingLicense.expiry} 
+                              onChange={(e) => handleDrivingLicenseChange('expiry', e.target.value)} 
+                              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none" 
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <>
@@ -712,20 +814,52 @@ export default function Profile() {
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                         <Award className="w-5 h-5 text-blue-600" />
-                        Core Skills
+                        Core Skills & Certifications
                       </h3>
                       <button onClick={() => handleEditClick('overview')} className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1">
                         <Edit2 className="w-4 h-4" /> Edit
                       </button>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 mb-4">
                       {candidate.skills.map((skill, idx) => (
                         <span key={idx} className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium border border-blue-100">
                           {skill}
                         </span>
                       ))}
                     </div>
+                    {candidate.certifications && candidate.certifications.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {candidate.certifications.map((cert, idx) => (
+                          <span key={idx} className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg text-sm font-medium border border-emerald-100 flex items-center gap-1">
+                            <ShieldCheck className="w-4 h-4" /> {cert}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
+                  
+                  {candidate.drivingLicense && candidate.drivingLicense.hasLicense && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <Award className="w-5 h-5 text-blue-600" />
+                        Driving License
+                      </h3>
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-wrap gap-4 md:gap-8">
+                        <div>
+                          <p className="text-sm text-slate-500 mb-1">Type</p>
+                          <p className="font-medium text-slate-900">{candidate.drivingLicense.type}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-slate-500 mb-1">Issuing Country</p>
+                          <p className="font-medium text-slate-900">{candidate.drivingLicense.country}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-slate-500 mb-1">Expiry Date</p>
+                          <p className="font-medium text-slate-900">{candidate.drivingLicense.expiry}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -996,8 +1130,11 @@ export default function Profile() {
                       />
                     </div>
 
-                    <div className="col-span-1 md:col-span-2 mt-4 mb-2">
+                    <div className="col-span-1 md:col-span-2 mt-4 mb-2 flex justify-between items-center">
                       <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Other Documents</h4>
+                      <button className="text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 border border-blue-200">
+                        <Upload className="w-3 h-3" /> Upload New
+                      </button>
                     </div>
 
                     {candidate.documents.map((doc) => (

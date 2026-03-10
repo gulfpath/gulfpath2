@@ -3,6 +3,7 @@ import { GoogleGenAI, LiveServerMessage, Modality, Type } from '@google/genai';
 import { Mic, Video, VideoOff, PlayCircle, StopCircle, User, CheckCircle2, ChevronRight, Download, MapPin, Phone, Briefcase, Star, AlertCircle, ClipboardCheck, MessageCircle, Share2, Navigation } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import confetti from 'canvas-confetti';
+import html2pdf from 'html2pdf.js';
 
 // --- Audio Utilities ---
 class PCMPlayer {
@@ -111,6 +112,8 @@ type Phase = 'intro' | 'info' | 'interview' | 'results';
 interface AssessmentData {
   score: number;
   summary: string;
+  strengths: string[];
+  areasForImprovement: string[];
   questions: {
     q: string;
     a: string;
@@ -219,6 +222,28 @@ export default function MockInterview() {
     } finally {
       setIsGeneratingImage(false);
     }
+  };
+
+  const downloadPDF = () => {
+    const element = document.getElementById('report-content');
+    if (!element) return;
+    
+    // Temporarily hide elements we don't want in PDF
+    const noPrintElements = element.querySelectorAll('.print\\:hidden');
+    noPrintElements.forEach(el => (el as HTMLElement).style.display = 'none');
+    
+    const opt = {
+      margin:       0.5,
+      filename:     `${userData.name}_GulfPath_Report.pdf`,
+      image:        { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' as const }
+    };
+    
+    html2pdf().set(opt).from(element).save().then(() => {
+      // Restore hidden elements
+      noPrintElements.forEach(el => (el as HTMLElement).style.display = '');
+    });
   };
 
   const startVideo = async () => {
@@ -370,6 +395,16 @@ When generating the feedback for the tool, look for these 3 specific markers:
                 properties: {
                   score: { type: Type.INTEGER, description: "Final score. MUST be an integer between 1 and 10. Maximum value is 10." },
                   summary: { type: Type.STRING, description: "Short paragraph summary of the candidate's performance" },
+                  strengths: {
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING },
+                    description: "List of 2-3 key strengths demonstrated by the candidate."
+                  },
+                  areasForImprovement: {
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING },
+                    description: "List of 2-3 specific areas where the candidate needs to improve."
+                  },
                   questions: {
                     type: Type.ARRAY,
                     items: {
@@ -430,30 +465,7 @@ When generating the feedback for the tool, look for these 3 specific markers:
               if (call) {
                 const args = call.args as unknown as AssessmentData;
                 setAssessment(args);
-                setPhase('results');
                 
-                // Trigger Confetti if score >= 7
-                if (args.score >= 7) {
-                  confetti({
-                    particleCount: 150,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                    colors: ['#2563EB', '#F59E0B', '#10B981'] // GulfPath colors
-                  });
-                  
-                  // Trigger WhatsApp Webhook (Simulated)
-                  fetch('/api/webhook/whatsapp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      phone: userData.phone,
-                      name: userData.name,
-                      score: args.score,
-                      reportUrl: `https://gulfpath.in/verify/${userData.phone}`
-                    })
-                  }).catch(console.error); // Ignore errors for demo
-                }
-
                 // Send tool response to continue the conversation
                 sessionPromise.then(session => {
                   session.sendToolResponse({
@@ -763,6 +775,35 @@ When generating the feedback for the tool, look for these 3 specific markers:
               </div>
 
               <div className="flex items-center gap-4">
+                {assessment && (
+                  <button 
+                    onClick={() => {
+                      setPhase('results');
+                      if (assessment.score >= 7) {
+                        confetti({
+                          particleCount: 150,
+                          spread: 70,
+                          origin: { y: 0.6 },
+                          colors: ['#2563EB', '#F59E0B', '#10B981']
+                        });
+                        fetch('/api/webhook/whatsapp', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            phone: userData.phone,
+                            name: userData.name,
+                            score: assessment.score,
+                            reportUrl: `https://gulfpath.in/verify/${userData.phone}`
+                          })
+                        }).catch(console.error);
+                      }
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2.5 rounded-xl font-bold transition-colors flex items-center gap-2 animate-pulse"
+                  >
+                    <ClipboardCheck className="h-5 w-5" />
+                    View Report
+                  </button>
+                )}
                 <button 
                   onClick={() => setIsVideoEnabled(!isVideoEnabled)}
                   className={`p-3 rounded-full transition-colors ${isVideoEnabled ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-red-500/20 text-red-500 hover:bg-red-500/30'}`}
@@ -783,7 +824,7 @@ When generating the feedback for the tool, look for these 3 specific markers:
 
         {/* PHASE 4: RESULTS DASHBOARD */}
         {phase === 'results' && assessment && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700 print:space-y-4">
+          <div id="report-content" className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700 print:space-y-4">
             {/* Top Summary Card (Certificate Style) */}
             <div className="bg-slate-800 border border-slate-700 rounded-3xl p-8 flex flex-col md:flex-row items-center gap-8 shadow-2xl print:bg-white print:border-gray-300 print:shadow-none print:text-black">
               <div className="relative w-40 h-40 shrink-0 print:hidden">
@@ -821,6 +862,26 @@ When generating the feedback for the tool, look for these 3 specific markers:
                   {assessment.summary}
                 </p>
 
+                {/* Feedback Granularity */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 text-left">
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 print:bg-emerald-50 print:border-emerald-200">
+                    <h4 className="text-emerald-400 font-bold mb-2 flex items-center gap-2 print:text-emerald-700">
+                      <CheckCircle2 className="w-4 h-4" /> Strengths
+                    </h4>
+                    <ul className="list-disc list-inside text-sm text-emerald-200/80 space-y-1 print:text-emerald-800">
+                      {assessment.strengths?.map((s, i) => <li key={i}>{s}</li>)}
+                    </ul>
+                  </div>
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 print:bg-red-50 print:border-red-200">
+                    <h4 className="text-red-400 font-bold mb-2 flex items-center gap-2 print:text-red-700">
+                      <AlertCircle className="w-4 h-4" /> Areas for Improvement
+                    </h4>
+                    <ul className="list-disc list-inside text-sm text-red-200/80 space-y-1 print:text-red-800">
+                      {assessment.areasForImprovement?.map((a, i) => <li key={i}>{a}</li>)}
+                    </ul>
+                  </div>
+                </div>
+
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start print:hidden">
                   {assessment.score >= 7 && (
@@ -844,7 +905,7 @@ When generating the feedback for the tool, look for these 3 specific markers:
                     </>
                   )}
                   <button 
-                    onClick={() => window.print()}
+                    onClick={downloadPDF}
                     className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg"
                   >
                     <Download className="w-5 h-5" /> Download Report
@@ -865,6 +926,30 @@ When generating the feedback for the tool, look for these 3 specific markers:
                 <QRCodeSVG value={`https://gulfpath.in/verify/${userData.phone}`} size={100} />
                 <span className="text-xs text-gray-500 mt-2 font-mono">SCAN TO VERIFY</span>
               </div>
+            </div>
+
+            {/* User Guidance Section */}
+            <div className="bg-blue-900/20 border border-blue-500/30 rounded-2xl p-6 mb-8 print:hidden">
+              <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                <ClipboardCheck className="w-5 h-5 text-blue-400" /> How to use this report
+              </h3>
+              <p className="text-slate-300 text-sm leading-relaxed mb-4">
+                This report is your official GulfPath Mock Interview assessment. It highlights your technical knowledge, communication skills, and safety awareness.
+              </p>
+              <ul className="space-y-2 text-sm text-slate-300">
+                <li className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></div>
+                  <span><strong>Download & Save:</strong> Click "Download Report" to save a PDF copy to your device.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></div>
+                  <span><strong>Review Feedback:</strong> Look at the "Areas for Improvement" and individual question feedback to know what to study before your real interview.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></div>
+                  <span><strong>Visit Office:</strong> Bring this downloaded report to our Kompally office to fast-track your application process.</span>
+                </li>
+              </ul>
             </div>
 
             {/* Q&A Breakdown */}
@@ -985,7 +1070,7 @@ When generating the feedback for the tool, look for these 3 specific markers:
                       WhatsApp Office
                     </a>
                     <button 
-                      onClick={() => window.print()}
+                      onClick={downloadPDF}
                       className="w-full bg-white text-blue-900 hover:bg-blue-50 px-6 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 shadow-xl"
                     >
                       <Download className="w-5 h-5" />

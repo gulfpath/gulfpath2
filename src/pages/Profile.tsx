@@ -18,6 +18,7 @@ export default function Profile() {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [isEnhancingAvatar, setIsEnhancingAvatar] = useState(false);
   const [showCoronation, setShowCoronation] = useState(false);
+  const [clothingStyle, setClothingStyle] = useState<'polo' | 'vest'>('polo');
 
   // Levels definition
   const levels = [
@@ -27,11 +28,11 @@ export default function Profile() {
     { id: 4, name: 'Verified', req: 'Kompally HQ Visit', reward: 'Gold Ring + Green Check', sathi: "Mubarak ho! Aap ab Verified Gold Ustad hain. Ab visa door nahi!" },
   ];
 
-  // Avatar Border Logic
-  const getAvatarBorder = () => {
-    if (level >= 4) return 'ring-4 ring-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.6)]';
-    if (level === 3) return 'ring-4 ring-slate-300 shadow-[0_0_15px_rgba(203,213,225,0.5)]';
-    if (level === 2) return 'ring-4 ring-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.4)]';
+  // Avatar Border Logic based on 10x10 Trade Test Score
+  const getAvatarBorder = (score: number) => {
+    if (score >= 9) return 'ring-4 ring-yellow-400 shadow-[0_0_20px_rgba(250,204,21,0.6)]'; // Gold/Platinum
+    if (score >= 7) return 'ring-4 ring-slate-300 shadow-[0_0_15px_rgba(203,213,225,0.5)]'; // Silver
+    if (score >= 5) return 'ring-4 ring-amber-600 shadow-[0_0_15px_rgba(217,119,6,0.5)]'; // Bronze
     return 'ring-4 ring-slate-100';
   };
 
@@ -65,7 +66,7 @@ export default function Profile() {
                 },
               },
               {
-                text: "Take the user's uploaded selfie. Maintain the facial features with 100% accuracy. Replace the background with a professional, slightly blurred industrial workshop. Replace the user's current clothing with a clean, well-fitted navy blue polo shirt featuring a small 'GulfPath' logo on the chest. Ensure lighting is bright and professional, as if taken in a studio. Output a high-resolution circular avatar.",
+                text: `Take the user's uploaded selfie. Maintain the facial features with 100% accuracy. Replace the background with a professional, slightly blurred industrial workshop. Replace the user's current clothing with a clean, well-fitted ${clothingStyle === 'polo' ? "navy blue polo shirt featuring a small 'GulfPath' logo on the chest" : "high-visibility safety vest over a work shirt"}. Ensure lighting is bright and professional, as if taken in a studio. Output a high-resolution circular avatar.`,
               },
             ],
           },
@@ -368,7 +369,7 @@ export default function Profile() {
                 </button>
                 
                 <div className="relative z-10 flex flex-col items-center">
-                  <div className={`w-20 h-20 bg-white rounded-full flex items-center justify-center text-blue-600 text-3xl font-bold shadow-lg ${getAvatarBorder()} mb-3 overflow-hidden`}>
+                  <div className={`w-20 h-20 bg-white rounded-full flex items-center justify-center text-blue-600 text-3xl font-bold shadow-lg ${getAvatarBorder(candidate.aiScore)} mb-3 overflow-hidden`}>
                     {avatarUrl ? (
                       <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
@@ -392,9 +393,15 @@ export default function Profile() {
                   <div className="w-px h-12 bg-slate-700"></div>
                   <div className="text-center">
                     <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-1">Status</p>
-                    <div className="inline-flex items-center gap-1 text-sm font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded-md border border-blue-500/20">
-                      <ShieldCheck className="w-4 h-4" /> Verified
-                    </div>
+                    {level >= 4 ? (
+                      <div className="inline-flex items-center gap-1 text-sm font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">
+                        <ShieldCheck className="w-4 h-4" /> Kompally Verified
+                      </div>
+                    ) : (
+                      <div className="inline-flex items-center gap-1 text-sm font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded-md border border-blue-500/20">
+                        <ShieldCheck className="w-4 h-4" /> Verified
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -505,41 +512,62 @@ export default function Profile() {
             </div>
           ) : (
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-              <div className="relative group">
-                <div className={`w-32 h-32 bg-white rounded-full flex items-center justify-center text-blue-600 text-4xl font-bold shadow-lg ${getAvatarBorder()} transition-all duration-500 overflow-hidden relative z-10`}>
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
-                  ) : (
-                    candidate.name.charAt(0)
+              <div className="flex flex-col items-center gap-3">
+                <div className="relative group">
+                  <div className={`w-32 h-32 bg-white rounded-full flex items-center justify-center text-blue-600 text-4xl font-bold shadow-lg ${getAvatarBorder(candidate.aiScore)} transition-all duration-500 overflow-hidden relative z-10`}>
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      candidate.name.charAt(0)
+                    )}
+                    
+                    {/* Upload Overlay */}
+                    <label htmlFor="avatar-upload" className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                      <Camera className="w-6 h-6 text-white mb-1" />
+                      <span className="text-white text-[10px] font-bold uppercase tracking-wider">AI Enhance</span>
+                    </label>
+                    <input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+                    
+                    {isEnhancingAvatar && (
+                      <div className="absolute inset-0 bg-blue-900/90 flex flex-col items-center justify-center z-20">
+                        <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mb-1"></div>
+                        <span className="text-white text-[10px] font-bold text-center px-1">AI Studio...</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Kompally Verified Seal */}
+                  {level >= 4 && (
+                    <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-2 rounded-full border-2 border-white shadow-lg z-20" title="Kompally Verified">
+                      <ShieldCheck className="w-5 h-5" />
+                    </div>
                   )}
-                  
-                  {/* Upload Overlay */}
-                  <label htmlFor="avatar-upload" className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-                    <Camera className="w-6 h-6 text-white mb-1" />
-                    <span className="text-white text-[10px] font-bold uppercase tracking-wider">AI Enhance</span>
-                  </label>
-                  <input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
-                  
-                  {isEnhancingAvatar && (
-                    <div className="absolute inset-0 bg-blue-900/90 flex flex-col items-center justify-center z-20">
-                      <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mb-1"></div>
-                      <span className="text-white text-[10px] font-bold text-center px-1">AI Studio...</span>
+                  {/* Master Ustad Crown for Gold */}
+                  {candidate.aiScore >= 9 && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-white p-1.5 rounded-full border-2 border-white shadow-lg z-20">
+                      <Star className="w-4 h-4 fill-white" />
                     </div>
                   )}
                 </div>
                 
-                {/* Kompally Verified Seal */}
-                {level >= 4 && (
-                  <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-2 rounded-full border-2 border-white shadow-lg z-20" title="Kompally Verified">
-                    <ShieldCheck className="w-5 h-5" />
+                {/* AI Studio Clothing Selector */}
+                <div className="flex flex-col items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider">AI Studio Outfit</span>
+                  <div className="flex bg-white/10 p-0.5 rounded-lg backdrop-blur-sm border border-white/10">
+                    <button 
+                      onClick={() => setClothingStyle('polo')}
+                      className={`px-2 py-1 text-[10px] font-bold rounded-md transition-colors ${clothingStyle === 'polo' ? 'bg-blue-500 text-white' : 'text-blue-200 hover:bg-white/10'}`}
+                    >
+                      Polo
+                    </button>
+                    <button 
+                      onClick={() => setClothingStyle('vest')}
+                      className={`px-2 py-1 text-[10px] font-bold rounded-md transition-colors ${clothingStyle === 'vest' ? 'bg-amber-500 text-white' : 'text-blue-200 hover:bg-white/10'}`}
+                    >
+                      Vest
+                    </button>
                   </div>
-                )}
-                {/* Master Ustad Crown for Gold */}
-                {level >= 4 && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-white p-1.5 rounded-full border-2 border-white shadow-lg z-20">
-                    <Star className="w-4 h-4 fill-white" />
-                  </div>
-                )}
+                </div>
               </div>
               <div className="text-center md:text-left mt-4 md:mt-0">
                 <h1 className="text-3xl font-bold">{candidate.name}</h1>

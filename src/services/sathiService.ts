@@ -77,6 +77,7 @@ export interface DocumentVerificationResponse {
   type: string;
   ecnr_status: string;
   prn_number?: string;
+  rejection_reason?: 'blurry' | 'mismatch' | 'fake' | 'other' | null;
 }
 
 export const extractProfileFromText = async (text: string): Promise<SathiProfileResponse> => {
@@ -188,8 +189,8 @@ export const verifyDocument = async (
     const prompt = `Analyze the attached image of the educational document.
 1. Identify Type: Is it a 10th Class Marksheet, an ITI National Trade Certificate (NCTVT), or an SCVT Diploma?
 2. Extract Key Info: Look for Name, Date of Birth, Certificate Number, and the Year of Passing.
-3. Validation Check: Does the name match the user's profile name ('${profileName}')? Is the seal of the 'National Council for Vocational Training' or 'State Board' visible?
-4. Output (JSON): { 'document_valid': true/false, 'type': 'ITI_NCTVT', 'ecnr_status': 'Eligible', 'prn_number': '123456' } (Look for the 2026 SID Permanent Registration Number for PRN)`;
+3. Validation Check: Does the name match the user's profile name ('${profileName}')? Is the seal of the 'National Council for Vocational Training' or 'State Board' visible? Is the image clear and readable?
+4. Output (JSON): { "document_valid": true/false, "type": "ITI_NCTVT", "ecnr_status": "Eligible", "prn_number": "123456", "rejection_reason": "blurry" | "mismatch" | "fake" | null } (Look for the 2026 SID Permanent Registration Number for PRN. If document_valid is false, provide a rejection_reason: 'blurry' if unreadable, 'mismatch' if name doesn't match, 'fake' if it looks tampered or not a real document)`;
 
     const response = await ai.models.generateContent({
       model: "gemini-3.1-flash-image-preview",

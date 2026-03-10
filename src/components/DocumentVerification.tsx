@@ -58,6 +58,8 @@ export const DocumentVerification: React.FC<DocumentVerificationProps> = ({ prof
         
         if (newStrikeCount >= 3) {
           setErrorType('fake');
+        } else if (response.rejection_reason) {
+          setErrorType(response.rejection_reason === 'other' ? 'mismatch' : response.rejection_reason);
         } else if (isMismatch) {
           setErrorType('mismatch');
         } else {
@@ -147,6 +149,11 @@ export const DocumentVerification: React.FC<DocumentVerificationProps> = ({ prof
                 {errorType === 'mismatch' && (
                   <p className="text-sm font-medium text-amber-900">
                     "Hmm, thodi gadbad lag rahi hai. Is certificate par jo naam hai, woh aapke profile se match nahi ho raha. Ek baat dhyaan rakhiye: Gulf mein legal documents bahut zaroori hain. Kya aapne apna hi certificate upload kiya hai?"
+                  </p>
+                )}
+                {errorType === 'fake' && (
+                  <p className="text-sm font-medium text-amber-900">
+                    "Bhai, yeh document thoda ajeeb lag raha hai. GulfPath par hum sirf original documents hi lete hain. Kripya apna asli aur sahi document upload karein."
                   </p>
                 )}
               </div>

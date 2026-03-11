@@ -61,11 +61,35 @@ export default function JobCard({
   isQuickApply,
 }: JobCardProps) {
   const { t } = useTranslation();
-  const [isSaved, setIsSaved] = useState(false);
+  const [isSaved, setIsSaved] = useState(() => {
+    const savedJobs = JSON.parse(localStorage.getItem('savedJobs') || '[]');
+    return savedJobs.includes(id);
+  });
   const [isPlaying, setIsPlaying] = useState(false);
   const [highlightedWordIndex, setHighlightedWordIndex] = useState<number | null>(null);
   const [audioScript, setAudioScript] = useState("");
   const [words, setWords] = useState<string[]>([]);
+  const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    const appliedJobs = JSON.parse(localStorage.getItem('appliedJobs') || '{}');
+    if (appliedJobs[id]) {
+      setApplicationStatus(appliedJobs[id]);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    const savedJobs = JSON.parse(localStorage.getItem('savedJobs') || '[]');
+    if (isSaved) {
+      if (!savedJobs.includes(id)) {
+        savedJobs.push(id);
+        localStorage.setItem('savedJobs', JSON.stringify(savedJobs));
+      }
+    } else {
+      const updatedJobs = savedJobs.filter((jobId: string) => jobId !== id);
+      localStorage.setItem('savedJobs', JSON.stringify(updatedJobs));
+    }
+  }, [isSaved, id]);
 
   useEffect(() => {
     // Generate the script based on job details
@@ -234,14 +258,19 @@ export default function JobCard({
             <span className="sr-only md:not-sr-only md:text-sm">{isPlaying ? 'Stop Listening' : t('Listen')}</span>
           </button>
         )}
-        {isQuickApply ? (
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold transition-colors text-center flex-1 flex items-center justify-center gap-2">
+        {applicationStatus ? (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-6 py-2.5 rounded-xl font-bold text-center flex-1 flex items-center justify-center gap-2">
+            <CheckCircle className="h-5 w-5" />
+            {applicationStatus}
+          </div>
+        ) : isQuickApply ? (
+          <Link to={`/apply/${id}`} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-md hover:shadow-lg text-center flex-1 flex items-center justify-center gap-2 transform hover:-translate-y-0.5">
             <Zap className="h-4 w-4" fill="currentColor" />
             {t('Quick Apply')}
-          </button>
+          </Link>
         ) : (
-          <Link to={`/jobs/${id}`} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold transition-colors text-center flex-1">
-            {t('Apply')}
+          <Link to={`/apply/${id}`} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-md hover:shadow-lg text-center flex-1 flex items-center justify-center transform hover:-translate-y-0.5">
+            {t('Apply Now')}
           </Link>
         )}
       </div>

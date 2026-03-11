@@ -135,7 +135,7 @@ export default function Jobs() {
       const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                             job.location.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCountry = selectedCountry ? job.country === selectedCountry : true;
-      const matchesVerified = activeFilters.includes('zero-fee') ? job.isEmployerVerified === true : true;
+      const matchesVerified = activeFilters.includes('verified-employer') ? job.isEmployerVerified === true : true;
       const matchesHousing = activeFilters.includes('housing') ? job.housingProvided === true : true;
       const matchesEcr = activeFilters.includes('ecr') ? job.isEcrAccepted === true : true;
       const matchesFood = activeFilters.includes('food') ? job.benefits.includes("Free Food") : true;
@@ -327,14 +327,14 @@ export default function Jobs() {
           
           <div className="flex flex-wrap gap-3">
             <button 
-              onClick={() => toggleFilter('zero-fee')}
+              onClick={() => toggleFilter('verified-employer')}
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold border transition-colors ${
-                activeFilters.includes('zero-fee') 
+                activeFilters.includes('verified-employer') 
                   ? 'bg-green-50 border-green-500 text-green-700' 
                   : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
               }`}
             >
-              <ShieldCheck className={`h-4 w-4 ${activeFilters.includes('zero-fee') ? 'text-green-600' : 'text-gray-400'}`} />
+              <ShieldCheck className={`h-4 w-4 ${activeFilters.includes('verified-employer') ? 'text-green-600' : 'text-gray-400'}`} />
               Verified Employers Only
             </button>
             <button 

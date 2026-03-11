@@ -176,7 +176,7 @@ export const extractProfileFromText = async (text: string): Promise<SathiProfile
     return JSON.parse(jsonStr) as SathiProfileResponse;
   } catch (error) {
     console.error("Error extracting profile with Sathi:", error);
-    throw error;
+    throw new Error("We couldn't process your profile at this time. Please check your connection and try again.");
   }
 };
 
@@ -226,6 +226,6 @@ export const verifyDocument = async (
     return JSON.parse(jsonStr.trim()) as DocumentVerificationResponse;
   } catch (error) {
     console.error("Error verifying document:", error);
-    throw error;
+    throw new Error("Failed to verify the document. Please ensure the image is clear and try again.");
   }
 };

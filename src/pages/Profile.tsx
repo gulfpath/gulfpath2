@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { User, Briefcase, FileText, Upload, CheckCircle, MapPin, Phone, Mail, Award, Edit2, Plus, ShieldCheck, X, Save, Trash2, QrCode, Mic, Video, Plane, Calendar, Clock, Camera, Star } from 'lucide-react';
+import { User, Briefcase, FileText, Upload, CheckCircle, MapPin, Phone, Mail, Award, Edit2, Plus, ShieldCheck, X, Save, Trash2, QrCode, Mic, Video, Plane, Calendar, Clock, Camera, Star, Banknote } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { SathiProfileBuilder } from '../components/SathiProfileBuilder';
 import { DocumentVerification } from '../components/DocumentVerification';
 import { GoogleGenAI } from "@google/genai";
 import confetti from 'canvas-confetti';
+import { jobsData } from '../data/jobs';
 
 export default function Profile() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -700,6 +701,12 @@ export default function Profile() {
             Document Vault
           </button>
           <button 
+            onClick={() => setActiveTab('applications')}
+            className={`py-4 font-medium text-sm border-b-2 transition-colors ${activeTab === 'applications' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-900'}`}
+          >
+            My Applications
+          </button>
+          <button 
             onClick={() => setActiveTab('deployment')}
             className={`py-4 font-medium text-sm border-b-2 transition-colors ${activeTab === 'deployment' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-900'}`}
           >
@@ -1204,6 +1211,60 @@ export default function Profile() {
                   </div>
                 </>
               )}
+            </motion.div>
+          )}
+
+          {activeTab === 'applications' && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <Briefcase className="w-5 h-5 text-blue-600" />
+                  My Applications
+                </h3>
+              </div>
+              
+              {(() => {
+                const appliedJobsMap = JSON.parse(localStorage.getItem('appliedJobs') || '{}');
+                const appliedJobIds = Object.keys(appliedJobsMap);
+                const appliedJobs = jobsData.filter(job => appliedJobIds.includes(job.id));
+
+                if (appliedJobs.length === 0) {
+                  return (
+                    <div className="text-center py-12 bg-gray-50 rounded-2xl border border-gray-100">
+                      <Briefcase className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <h4 className="text-lg font-medium text-gray-900 mb-2">No applications yet</h4>
+                      <p className="text-gray-500 mb-6">Start applying for jobs to see them here.</p>
+                      <a href="/jobs" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                        Browse Jobs
+                      </a>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-4">
+                    {appliedJobs.map(job => (
+                      <div key={job.id} className="bg-white border border-gray-200 rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-blue-300 transition-colors">
+                        <div>
+                          <h4 className="text-lg font-bold text-gray-900 mb-1">{job.title}</h4>
+                          <p className="text-gray-600 font-medium mb-2">{job.company}</p>
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {job.location}</span>
+                            <span className="flex items-center gap-1"><Banknote className="w-4 h-4" /> {job.salary}</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2 w-full md:w-auto">
+                          <span className="bg-green-50 text-green-700 border border-green-200 px-4 py-1.5 rounded-full text-sm font-bold flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4" />
+                            {appliedJobsMap[job.id]}
+                          </span>
+                          <a href={`/jobs/${job.id}`} className="text-blue-600 hover:text-blue-700 text-sm font-medium">View Job Details</a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </motion.div>
           )}
 

@@ -13,6 +13,7 @@ export const DocumentVerification: React.FC<DocumentVerificationProps> = ({ prof
   const [isVerifying, setIsVerifying] = useState(false);
   const [result, setResult] = useState<DocumentVerificationResponse | null>(null);
   const [errorType, setErrorType] = useState<'blurry' | 'mismatch' | 'fake' | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [strikeCount, setStrikeCount] = useState(0);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -31,6 +32,7 @@ export const DocumentVerification: React.FC<DocumentVerificationProps> = ({ prof
       // Reset state for new upload
       setResult(null);
       setErrorType(null);
+      setErrorMessage(null);
     }
   };
 
@@ -39,6 +41,7 @@ export const DocumentVerification: React.FC<DocumentVerificationProps> = ({ prof
     
     setIsVerifying(true);
     setErrorType(null);
+    setErrorMessage(null);
     setResult(null);
     
     try {
@@ -66,8 +69,9 @@ export const DocumentVerification: React.FC<DocumentVerificationProps> = ({ prof
           setErrorType('blurry');
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Verification failed:", error);
+      setErrorMessage(error.message || "An unexpected error occurred.");
       const newStrikeCount = strikeCount + 1;
       setStrikeCount(newStrikeCount);
       
@@ -141,6 +145,11 @@ export const DocumentVerification: React.FC<DocumentVerificationProps> = ({ prof
             <div className="flex items-start gap-3 mb-4">
               <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
+                {errorMessage ? (
+                  <p className="text-sm font-medium text-amber-900 mb-2">
+                    {errorMessage}
+                  </p>
+                ) : null}
                 {errorType === 'blurry' && (
                   <p className="text-sm font-medium text-amber-900">
                     "Bhai, thoda sa rukiye! Yeh photo thodi dhundli (blurry) aayi hai. Ismein aapka naam aur certificate number saaf nahi dikh raha. Agar details saaf nahi hongi, toh Dubai ki company aapka visa reject kar degi."

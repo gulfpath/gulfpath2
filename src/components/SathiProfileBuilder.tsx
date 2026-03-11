@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Send, Loader2, CheckCircle2, AlertCircle, User, Briefcase, MapPin, Globe, FileText, Languages } from 'lucide-react';
 import { extractProfileFromText, SathiProfileResponse } from '../services/sathiService';
 
-export const SathiProfileBuilder: React.FC = () => {
+export const SathiProfileBuilder: React.FC<{ onProfileSaved?: (profile: SathiProfileResponse) => void }> = ({ onProfileSaved }) => {
   const [textInput, setTextInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -75,8 +75,8 @@ export const SathiProfileBuilder: React.FC = () => {
     try {
       const profile = await extractProfileFromText(textInput);
       setResult(profile);
-    } catch (err) {
-      setError('Failed to process the input. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to process the input. Please try again.');
       console.error(err);
     } finally {
       setIsProcessing(false);
@@ -267,7 +267,10 @@ export const SathiProfileBuilder: React.FC = () => {
             )}
             
             <div className="mt-6 flex justify-end">
-              <button className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors">
+              <button 
+                onClick={() => onProfileSaved && onProfileSaved(result)}
+                className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors"
+              >
                 Save Profile
               </button>
             </div>

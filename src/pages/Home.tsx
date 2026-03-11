@@ -87,6 +87,43 @@ export default function Home() {
     job.name.toLowerCase().includes(searchQuery.toLowerCase())
   ).slice(0, 6);
 
+  const [isListening, setIsListening] = useState(false);
+
+  const handleVoiceSearch = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert("Voice search is not supported in this browser.");
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    
+    recognition.lang = 'hi-IN';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event: any) => {
+      const speechResult = event.results[0][0].transcript;
+      setSearchQuery(speechResult);
+      setShowSuggestions(true);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error", event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -305,15 +342,13 @@ export default function Home() {
                   <div className="flex-1 flex items-center px-2 sm:px-4">
                     <button 
                       type="button"
-                      onClick={() => {
-                        const event = new CustomEvent('open-voice-assistant');
-                        window.dispatchEvent(event);
-                      }}
-                      className="relative p-3 bg-blue-600/20 rounded-xl flex items-center justify-center group hover:bg-blue-600/40 transition-colors mr-3"
+                      onClick={handleVoiceSearch}
+                      className={`relative p-3 rounded-xl flex items-center justify-center group transition-colors mr-3 ${isListening ? 'bg-red-500/20 hover:bg-red-500/40' : 'bg-blue-600/20 hover:bg-blue-600/40'}`}
                       title="Speak your job"
                     >
-                      <Mic className="w-6 h-6 text-blue-400 relative z-10 group-hover:text-blue-300" />
-                      <span className="absolute inset-0 rounded-xl bg-blue-500/40 animate-ping"></span>
+                      <Mic className={`w-6 h-6 relative z-10 ${isListening ? 'text-red-400 group-hover:text-red-300' : 'text-blue-400 group-hover:text-blue-300'}`} />
+                      {isListening && <span className="absolute inset-0 rounded-xl bg-red-500/40 animate-ping"></span>}
+                      {!isListening && <span className="absolute inset-0 rounded-xl bg-blue-500/40 animate-ping"></span>}
                     </button>
                     <input
                       type="text"

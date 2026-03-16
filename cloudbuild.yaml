@@ -1,5 +1,5 @@
 steps:
-  # 1. Container Compilation with Explicit Argument Injections
+  # 1. Container Compilation with Explicit Argument Injection
   - name: 'gcr.io/cloud-builders/docker'
     args: 
       - 'build'

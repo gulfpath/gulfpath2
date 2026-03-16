@@ -1,23 +1,22 @@
-# Use Node.js LTS
-FROM node:20-slim
-
-# Set working directory
+# 1. Build Phase
+FROM node:20-slim AS build
 WORKDIR /app
-
-# Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install
-
-# Copy the rest of your code
 COPY . .
-
-# Build the Vite frontend
 RUN npm run build
 
-# Expose the port Cloud Run expects
-EXPOSE 8080
+# 2. Execution Phase
+FROM node:20-slim
+WORKDIR /app
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/package*.json ./
+# Only install production dependencies to keep it light
+RUN npm install --omit=dev
 
-# Start the application 
-# Note: Since you have Express, you should have a server file (e.g., server.js)
-# If you are just trying to serve the Vite build, use 'preview' with the correct flags:
-CMD ["npm", "run", "preview", "--", "--port", "8080", "--host", "0.0.0.0"]
+# Vite preview needs the vite package to run
+RUN npm install vite
+
+# Cloud Run injects the PORT env var, Vite preview must listen on 0.0.0.0
+EXPOSE 8080
+CMD ["npx", "vite", "preview", "--port", "8080", "--host", "0.0.0.0"]

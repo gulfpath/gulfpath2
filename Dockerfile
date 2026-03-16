@@ -4,19 +4,25 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
+
+# Ensure the build process can see the API key to bake it into the frontend
+ARG GEMINI_API_KEY
+ENV VITE_GEMINI_API_KEY=$GEMINI_API_KEY
 RUN npm run build
 
-# 2. Execution Phase
+# 2. Production Execution Phase
 FROM node:20-slim
 WORKDIR /app
+
+# Copy the compiled frontend from the build stage
 COPY --from=build /app/dist ./dist
-COPY --from=build /app/package*.json ./
-# Only install production dependencies to keep it light
-RUN npm install --omit=dev
 
-# Vite preview needs the vite package to run
-RUN npm install vite
+# Install 'serve', a robust production web server
+RUN npm install -g serve
 
-# Cloud Run injects the PORT env var, Vite preview must listen on 0.0.0.0
+# Cloud Run expects traffic on 8080
 EXPOSE 8080
-CMD ["npx", "vite", "preview", "--port", "8080", "--host", "0.0.0.0"]
+
+# Serve the 'dist' folder. 
+# The '-s' flag ensures React Router works correctly (Single Page App mode)
+CMD ["serve", "-s", "dist", "-l", "8080"]
